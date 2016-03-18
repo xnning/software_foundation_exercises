@@ -168,4 +168,124 @@ Proof.
     reflexivity.
 Qed.
 
+(* Proofs Within Proofs *)
+
+Theorem mult_O_plus' : forall n m :nat,
+    ( 0 + n) * m = n * m.
+Proof.
+  intros n m.
+  assert (H : 0 + n = n).
+    Case "assertion proof". reflexivity.
+  rewrite -> H.
+  reflexivity.
+Qed.
+  
+Theorem plus_rearrange_firsttry : forall n m p q : nat,
+  (n + m) + (p + q) = (m + n) + (p + q).
+Proof.
+  intros n m p q.
+  rewrite -> (plus_comm m n).
+  reflexivity.
+Qed.
+
+Theorem plus_rearrange : forall n m p q : nat,
+  (n + m) + (p + q) = (m + n) + (p + q).
+Proof.
+  intros n m p q.
+  assert (H: n + m = m + n).
+    Case "Proof of assertion".
+    rewrite -> plus_comm. reflexivity.
+  rewrite -> H. reflexivity. Qed.
+
+(* Exercise: 4 stars (mult_comm) *)
+
+Theorem plus_swap : forall n m p : nat, 
+  n + (m + p) = m + (n + p).
+Proof.
+  intros n m p.
+  assert (Hl: n + (m + p) = (n + m) + p).
+    Case "assertion: n + (m + p) = (n + m) + p".
+    rewrite -> plus_assoc.
+    reflexivity.
+  assert (Hr: m + (n + p) = (m + n) + p).
+    Case "assertion: m + (n + p) = (m + n) + p".
+    rewrite -> plus_assoc.
+    reflexivity.
+  rewrite -> Hl.
+  rewrite -> Hr.
+  assert (H: n + m = m + n).
+    Case "assertion: n + m = m + n".
+    rewrite -> plus_comm. reflexivity.
+  rewrite -> H.
+  reflexivity.
+  Qed.
+
+Theorem mult_O_r : forall n: nat, n * 0 = 0.
+Proof.
+  intros n.
+  induction n as [ | n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = n'".
+    simpl.
+    rewrite -> IHn'.
+    reflexivity.
+Qed.
+
+Theorem mult_Sn_m : forall m n: nat,
+    m * (S n) = m + m * n.
+Proof.
+  intros m n.
+  induction m as [| m'].
+  Case "m = 0".
+    simpl.
+    reflexivity.
+  Case "m = S m'".
+    simpl.
+    rewrite -> IHm'.
+    rewrite -> plus_swap.
+    reflexivity.
+Qed.
+
+Theorem mult_comm : forall m n : nat,
+ m * n = n * m.
+Proof.
+  intros m n.
+  induction m as [ | m'].
+  Case "m = 0".
+    simpl.
+    rewrite -> mult_O_r.
+    reflexivity.
+  Case "m = S m'".
+    simpl.
+    rewrite -> IHm'.
+    rewrite -> mult_Sn_m.
+    reflexivity.
+Qed.
+
+
+(* Exercise: 2 stars, optional (evenb_n__oddb_Sn) *)
+
+Theorem evenb_n__oddb_Sn : forall n : nat,
+  evenb n = negb (evenb (S n)).
+Proof.
+  intros n.
+  induction n as [ | n'].
+  Case "n = 0".
+    simpl. reflexivity.
+  Case "n = S n'".
+    assert (H1: evenb (S (S n')) = evenb n').
+      SCase "assertion: H1: evenb (S (S n')) = evenb n'".
+      simpl. reflexivity.
+    rewrite -> H1.
+    rewrite <- (negb_involutive (evenb (S n'))).
+    rewrite <- IHn'.
+    reflexivity.
+Qed.
+
+    
+      
+    
+
+  
 
