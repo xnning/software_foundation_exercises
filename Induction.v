@@ -60,4 +60,112 @@ Proof.
       reflexivity.
 Qed.
 
+(* Proof by Induction *)
+
+Theorem plus_O_r : forall n:nat, n + O = n.
+
+Proof.
+  intros n.
+  induction n as [ | n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    reflexivity.
+  Qed.
+
+Theorem minus_diag : forall n,
+  minus n n = 0.
+Proof.
+  (* WORKED IN CLASS *)
+  intros n. induction n as [ | n'].
+  Case "n = 0".
+    simpl. reflexivity.
+  Case "n = S n'".
+    simpl. rewrite -> IHn'. reflexivity. Qed.
+
+(* Exercise: 2 stars (basic_induction) *)
+
+Theorem mult_0_r : forall n:nat,
+  n * 0 = 0.
+Proof.
+  intros n.
+  induction n as  [ | n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    reflexivity.
+Qed.
+    
+Theorem plus_n_Sm : forall n m : nat, 
+  S (n + m) = n + (S m).
+Proof.
+  intros n m.
+  induction n as [ | n'].
+  Case "n = 0".
+    rewrite -> (plus_O_n m).
+    rewrite -> (plus_O_n (S m)).
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    reflexivity.
+Qed.
+
+Theorem plus_comm : forall n m : nat,
+  n + m = m + n.
+Proof.
+  intros n m.
+  induction n as [ | n'].
+  Case "n = 0".
+    rewrite -> (plus_O_n).
+    rewrite -> (plus_O_r).
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite <- plus_n_Sm.
+    rewrite -> IHn'.
+    reflexivity.
+  Qed.
+
+Theorem plus_assoc : forall n m p : nat,
+  n + (m + p) = (n + m) + p.
+Proof.
+  intros n m p.
+  induction n as [ | n'].
+  Case "n = 0".
+    rewrite -> plus_O_n.
+    rewrite -> (plus_O_n m).
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    reflexivity.
+Qed.
+
+(* Exercise: 2 stars (double_plus) *)
+
+Fixpoint double (n:nat) :=
+  match n with
+  | O => O
+  | S n' => S (S (double n'))
+  end.
+
+Lemma double_plus : forall n, double n = n + n .
+Proof.
+  intros n.
+  induction n as [ | n'].
+  Case "n = 0".
+    simpl.
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    rewrite -> plus_n_Sm.
+    reflexivity.
+Qed.
+
 
