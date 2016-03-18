@@ -365,12 +365,12 @@ Proof.
 
   (* Exercise: 2 stars, optional (decreasing) *)
   
-  Fixpoint rec (m:nat) (n:nat) :nat :=
-    match S m, S n with
-    | O, _ => O
-    | _, O => O
-    | S m', S n' => rec n' m'
-    end.
+  (* Fixpoint rec (m:nat) (n:nat) :nat := *)
+    (* match S m, S n with *)
+    (* | O, _ => O *)
+    (* | _, O => O *)
+    (* | S m', S n' => rec n' m' *)
+    (* end. *)
   
           
               
