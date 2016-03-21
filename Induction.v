@@ -99,8 +99,8 @@ Proof.
     rewrite -> IHn'.
     reflexivity.
 Qed.
-    
-Theorem plus_n_Sm : forall n m : nat, 
+
+Theorem plus_n_Sm : forall n m : nat,
   S (n + m) = n + (S m).
 Proof.
   intros n m.
@@ -179,7 +179,7 @@ Proof.
   rewrite -> H.
   reflexivity.
 Qed.
-  
+
 Theorem plus_rearrange_firsttry : forall n m p q : nat,
   (n + m) + (p + q) = (m + n) + (p + q).
 Proof.
@@ -199,7 +199,7 @@ Proof.
 
 (* Exercise: 4 stars (mult_comm) *)
 
-Theorem plus_swap : forall n m p : nat, 
+Theorem plus_swap : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
   intros n m p.
@@ -308,7 +308,7 @@ Proof.
   simpl. reflexivity.
 Qed.
 
-Theorem plus_ble_compat_l : forall n m p : nat, 
+Theorem plus_ble_compat_l : forall n m p : nat,
   ble_nat n m = true -> ble_nat (p + n) (p + m) = true.
 Proof.
   intros n m p. intros h.
@@ -332,7 +332,7 @@ Qed.
 Theorem mult_1_l : forall n:nat, 1 × n = n.
 Proof.
   intros n.
-  simpl. 
+  simpl.
   rewrite -> plus_O_r.
   reflexivity.
 Qed.
@@ -404,7 +404,7 @@ Qed.
 
 (* Exercise: 2 stars, optional (beq_nat_refl) *)
 
-Theorem beq_nat_refl : forall n : nat, 
+Theorem beq_nat_refl : forall n : nat,
   true = beq_nat n n.
 Proof.
   intros n.
@@ -415,7 +415,7 @@ Proof.
 Qed.
 
 (* Exercise: 2 stars, optional (plus_swap') *)
-Theorem plus_swap' : forall n m p : nat, 
+Theorem plus_swap' : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
   intros n m p.
@@ -488,7 +488,130 @@ Fixpoint normalize (b:bin) : bin :=
   | MT b' => MT (normalize b')
   end.
 
+Compute (normalize (MT (T (T (T Z))))).
+
+
+Lemma normalize_incr_comm : forall b, normalize (incr b) = incr (normalize b).
+Proof.
+  intros b.
+  induction b.
+  reflexivity.
+
+  remember (normalize b) as b'.
+  destruct b'.
+  simpl.
+  rewrite <- Heqb'.
+  reflexivity.
+  simpl.
+  rewrite <- Heqb'.
+  reflexivity.
+  simpl.
+  rewrite <- Heqb'.
+  reflexivity.
+
+  simpl.
+  rewrite IHb.
+
+  remember (normalize b) as b'.
+
+  destruct b'.
+  reflexivity.
+  reflexivity.
+  reflexivity.
+Qed.
+
+
+
+Lemma n2b_T : forall n, nat_to_bin (n + n) = normalize (T (nat_to_bin n)).
+Proof.
+  intros n.
+  induction n.
+  reflexivity.
+  assert ((nat_to_bin (S n + S n)) = (incr (incr (nat_to_bin (n + n))))).
+  simpl.
+  rewrite <- plus_n_Sm.
+  simpl.
+  reflexivity.
+  rewrite H.
+  rewrite IHn.
+  rewrite <- normalize_incr_comm.
+  rewrite <- normalize_incr_comm.
+  simpl.
+  reflexivity.
+Qed.
+
+Lemma n2b_MT : forall n, nat_to_bin (n + n + 1) = normalize (MT (nat_to_bin n)).
+Proof.
+  intros n.
+  induction n.
+  reflexivity.
+  simpl.
+  assert (n + S n = S n + n).
+  rewrite plus_comm.
+  reflexivity.
+  rewrite H.
+  simpl.
+  rewrite IHn.
+  rewrite <- normalize_incr_comm.
+  rewrite <- normalize_incr_comm.
+  simpl.
+  reflexivity.
+Qed.
+
+Lemma normalize_double : forall b, normalize(normalize b) = normalize b.
+Proof.
+  intros b.
+  induction b.
+  Case "b = Z".
+    reflexivity.
+  Case "b = T b'".
+    remember (normalize b) as b'.
+    destruct b'.
+    simpl.
+    rewrite <- Heqb'.
+    reflexivity.
+    simpl.
+    rewrite <- Heqb'.
+    assert (((normalize (T (T b'))) = (match normalize (T b') with Z => Z | T c => T (T c) | MT c => T (MT c) end))).
+    simpl.
+    reflexivity.
+    rewrite H.
+    rewrite IHb.
+    reflexivity.
+
+    simpl.
+    rewrite <- Heqb'.
+    simpl.
+    rewrite <- IHb.
+    reflexivity.
+  Case "b = MT b'".
+    simpl.
+    rewrite IHb.
+    reflexivity.
+Qed.
+
+
 Theorem bin_nat_bin : forall b:bin,
     (nat_to_bin (bin_to_nat b)) = normalize b.
 Proof.
-  Abort.
+  intros b.
+  induction b.
+  Case "b = Z".
+    reflexivity.
+  Case "b = T b'".
+    simpl.
+    rewrite plus_O_r.
+    rewrite n2b_T.
+    rewrite IHb.
+    simpl.
+    rewrite normalize_double.
+    reflexivity.
+  Case "b = MT b'".
+    simpl.
+    rewrite plus_O_r.
+    rewrite n2b_MT.
+    rewrite IHb.
+    simpl.
+    rewrite normalize_double.
+    reflexivity.
+Qed.
