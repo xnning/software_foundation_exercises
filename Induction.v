@@ -491,4 +491,4 @@ Fixpoint normalize (b:bin) : bin :=
 Theorem bin_nat_bin : forall b:bin,
     (nat_to_bin (bin_to_nat b)) = normalize b.
 Proof.
-  admit.
+  Abort.
