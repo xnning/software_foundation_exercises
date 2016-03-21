@@ -355,7 +355,6 @@ Proof.
     | MT n => T (incr n)
     end.
 
-
   Fixpoint bin_to_nat (b:bin) :nat :=
     match b with
     | Z => 0
@@ -371,12 +370,3 @@ Proof.
     (* | _, O => O *)
     (* | S m', S n' => rec n' m' *)
     (* end. *)
-  
-          
-              
-  
-  
-
-  
-
-  

@@ -451,10 +451,44 @@ Proof.
     reflexivity.
 Qed.
 
+(* Exercise: 5 stars, advanced (binary_inverse) *)
 
+Fixpoint nat_to_bin (n:nat) : bin :=
+  match n with
+  | 0 => Z
+  | S n' => incr (nat_to_bin n')
+  end.
 
+Theorem nat_to_bin_to_nat : forall n:nat,
+    n = (bin_to_nat (nat_to_bin n)).
+Proof.
+  intros n.
+  induction n as [ | n'].
+  Case "n = 0".
+    simpl.
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> bin_to_nat_pres_incr.
+    rewrite <- IHn'.
+    rewrite -> plus_comm.
+    rewrite -> (plus_1_l n').
+    reflexivity.
+Qed.
 
+(* (b) Because a number can have multiple forms of bin. For example, 0 can be Z, or can be (T Z). *)
 
+Fixpoint normalize (b:bin) : bin :=
+  match b with
+  | Z => Z
+  | T b' => match (normalize b') with
+             | Z => Z
+             | x' => T x'
+           end
+  | MT b' => MT (normalize b')
+  end.
 
-  
-
+Theorem bin_nat_bin : forall b:bin,
+    (nat_to_bin (bin_to_nat b)) = normalize b.
+Proof.
+  admit.
