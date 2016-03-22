@@ -611,3 +611,72 @@ Proof.
   rewrite -> rev_involutive.
   reflexivity.
 Qed.
+
+(* Options *)
+
+Fixpoint index_bad (n:nat) (l:natlist) : nat :=
+  match l with
+  | nil => 42 (* arbitrary! *)
+  | a :: l' => match beq_nat n O with
+               | true => a
+               | false => index_bad (pred n) l'
+               end
+  end.
+
+Inductive natoption : Type :=
+  | Some : nat -> natoption
+  | None : natoption.
+
+Fixpoint index (n:nat) (l:natlist) : natoption :=
+  match l with
+  | nil => None
+  | a :: l' => match beq_nat n O with
+               | true => Some a
+               | false => index (pred n) l'
+               end
+  end.
+
+Example test_index1 : index 0 [4;5;6;7] = Some 4.
+Proof. reflexivity. Qed.
+Example test_index2 : index 3 [4;5;6;7] = Some 7.
+Proof. reflexivity. Qed.
+Example test_index3 : index 10 [4;5;6;7] = None.
+Proof. reflexivity. Qed.
+
+Fixpoint index' (n:nat) (l:natlist) : natoption :=
+  match l with
+  | nil => None
+  | a :: l' => if beq_nat n O then Some a else index' (pred n) l'
+  end.
+
+Definition option_elim (d : nat) (o : natoption) : nat :=
+  match o with
+  | Some n' => n'
+  | None => d
+  end.
+
+(* Exercise: 2 stars (hd_opt) *)
+
+Definition hd_opt (l : natlist) : natoption :=
+  match l with
+  | nil => None
+  | h :: t => Some h
+  end.
+
+Example test_hd_opt1 : hd_opt [] = None.
+  Proof. reflexivity. Qed.
+Example test_hd_opt2 : hd_opt [1] = Some 1.
+  Proof. reflexivity. Qed.
+Example test_hd_opt3 : hd_opt [5;6] = Some 5.
+  Proof. reflexivity. Qed.
+
+(* Exercise: 1 star, optional (option_elim_hd) *)
+
+Theorem option_elim_hd : forall(l:natlist) (default:nat),
+  hd default l = option_elim default (hd_opt l).
+Proof.
+  intros l d.
+  destruct l as [| h t].
+  simpl. reflexivity.
+  simpl. reflexivity.
+Qed.
