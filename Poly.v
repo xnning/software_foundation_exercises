@@ -242,3 +242,42 @@ Example test_split:
   split [(1,false);(2,false)] = ([1;2],[false;false]).
 Proof.
   reflexivity. Qed.
+
+(* Polymorphic Options *)
+
+
+Inductive option (X:Type) : Type :=
+  | Some : X -> option X
+  | None : option X.
+
+Arguments Some {X} _.
+Arguments None {X}.
+
+Fixpoint index {X : Type} (n : nat)
+               (l : list X) : option X :=
+  match l with
+  | [] => None
+  | a :: l' => if beq_nat n O then Some a else index (pred n) l'
+  end.
+
+Example test_index1 : index 0 [4;5;6;7] = Some 4.
+Proof. reflexivity. Qed.
+Example test_index2 : index 1 [[1];[2]] = Some [2].
+Proof. reflexivity. Qed.
+Example test_index3 : index 2 [true] = None.
+Proof. reflexivity. Qed.
+
+(* Exercise: 1 star, optional (hd_opt_poly) *)
+
+Definition hd_opt {X : Type} (l : list X) : option X :=
+  match l with
+  | nil => None
+  | h :: t => Some h
+  end.
+
+Check @hd_opt.
+
+Example test_hd_opt1 : hd_opt [1;2] = Some 1.
+  reflexivity. Qed.
+Example test_hd_opt2 : hd_opt [[1];[2]] = Some [1].
+  reflexivity. Qed.
