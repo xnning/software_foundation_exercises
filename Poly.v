@@ -195,3 +195,50 @@ Proof.
   rewrite -> IHt.
   reflexivity.
 Qed.
+
+(* Polymorphic Pairs *)
+
+Inductive prod (X Y : Type) : Type :=
+  pair : X -> Y -> prod X Y.
+
+Arguments pair {X} {Y} _ _.
+
+Notation "( x , y )" := (pair x y).
+Notation "X × Y" := (prod X Y) : type_scope.
+
+Definition fst {X Y : Type} (p : X × Y) : X :=
+  match p with (x,y) => x end.
+
+Definition snd {X Y : Type} (p : X × Y) : Y :=
+  match p with (x,y) => y end.
+
+Fixpoint combine {X Y : Type} (lx : list X) (ly : list Y)
+           : list (X×Y) :=
+  match (lx,ly) with
+  | ([],_) => []
+  | (_,[]) => []
+  | (x::tx, y::ty) => (x,y) :: (combine tx ty)
+  end.
+
+(* Exercise: 1 star, optional (combine_checks) *)
+
+Check combine.
+
+Eval compute in (combine [1;2] [false;false;true;true]).
+
+(* Exercise: 2 stars (split) *)
+
+Fixpoint split
+           {X Y : Type} (l : list (X×Y))
+           : (list X) × (list Y) :=
+  match l with
+  | nil => (nil, nil)
+  | (h1, h2) :: t => match (split t) with
+                      (t1, t2) => (h1 :: t1, h2 :: t2)
+                    end
+  end.
+
+Example test_split:
+  split [(1,false);(2,false)] = ([1;2],[false;false]).
+Proof.
+  reflexivity. Qed.
