@@ -556,3 +556,48 @@ Theorem override_example : forall(b:bool),
 Proof.
   reflexivity.
 Qed.
+
+(* The unfold Tactic *)
+
+Theorem unfold_example_bad : forall m n,
+  3 + n = m ->
+  plus3 n + 1 = m + 1.
+Proof.
+  intros m n H.
+(* At this point, we'd like to do rewrite → H, since
+     plus3 n is definitionally equal to 3 + n.  However,
+     Coq doesn't automatically expand plus3 n to its
+     definition. *)
+  Abort.
+
+Theorem unfold_example : forall m n,
+  3 + n = m ->
+  plus3 n + 1 = m + 1.
+Proof.
+  intros m n H.
+  unfold plus3.
+  rewrite -> H.
+  reflexivity. Qed.
+
+Theorem override_eq : forall{X:Type} x k (f:nat->X),
+  (override f k x) k = x.
+Proof.
+  intros X x k f.
+  unfold override.
+  rewrite <- beq_nat_refl.
+  reflexivity. Qed.
+
+(* Exercise: 2 stars (override_neq) *)
+
+Theorem override_neq : forall(X:Type) x1 x2 k1 k2 (f : nat->X),
+  f k1 = x1 ->
+  beq_nat k2 k1 = false ->
+  (override f k2 x2) k1 = x1.
+Proof.
+  intros X x1 x2 k1 k2 f.
+  intros fk1 uneqk1k2.
+  unfold override.
+  rewrite -> uneqk1k2.
+  rewrite -> fk1.
+  reflexivity.
+Qed.
