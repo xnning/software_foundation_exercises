@@ -601,3 +601,139 @@ Proof.
   rewrite -> fk1.
   reflexivity.
 Qed.
+
+(* Additional Exercises *)
+
+(* Exercise: 2 stars (fold_length) *)
+
+
+Definition fold_length {X : Type} (l : list X) : nat :=
+  fold (fun _ n => S n) l 0.
+
+Example test_fold_length1 : fold_length [4;7;0] = 3.
+Proof. reflexivity. Qed.
+
+Theorem fold_length_correct : forall X (l : list X),
+  fold_length l = length l.
+Proof.
+  intros X l.
+  unfold fold_length.
+  induction l as [| h t].
+  Case "l = []".
+    simpl. reflexivity.
+  Case "l = h :: t".
+    simpl.
+    rewrite -> IHt.
+    reflexivity.
+Qed.
+
+(* Exercise: 3 stars (fold_map) *)
+
+Definition fold_map {X Y:Type} (f : X -> Y) (l : list X) : list Y :=
+  fold (fun e acc => f e :: acc) l [].
+
+Theorem fold_map_correct : forall X Y (f : X -> Y) (l : list X),
+    fold_map f l = map f l.
+Proof.
+  intros X Y f l.
+  unfold fold_map.
+  induction l as [ | h t].
+  Case "l = []".
+    simpl. reflexivity.
+  Case "l = h :: t".
+    simpl.
+    rewrite -> IHt.
+    reflexivity.
+Qed.
+
+(* Exercise: 2 stars, advanced (index_informal) *)
+
+Theorem index_length : forall X (l:list X) (n:nat),
+    length l = n ->
+    index n l = None.
+Proof.
+  intros X l.
+  induction l as [ | h t].
+  Case "l = []".
+    simpl. reflexivity.
+  Case "l = h :: t".
+    simpl.
+    intros n.
+    intros ih.
+    rewrite <- ih.
+    simpl.
+    rewrite -> IHt.
+    reflexivity.
+    reflexivity.
+Qed.
+
+(* Exercise: 4 stars, advanced (church_numerals) *)
+
+Module Church.
+
+Definition nat := forall X : Type, (X -> X) -> X -> X.
+
+Definition one : nat :=
+  fun (X : Type) (f : X -> X) (x : X) => f x.
+
+Definition two : nat :=
+  fun (X : Type) (f : X -> X) (x : X) => f (f x).
+
+Definition zero : nat :=
+  fun (X : Type) (f : X -> X) (x : X) => x.
+
+Definition three : nat := @doit3times.
+
+Definition succ (n : nat) : nat := fun (X : Type) (f: X -> X) (x : X) =>
+                                 f (n X f x).
+
+Example succ_1 : succ zero = one.
+Proof. reflexivity. Qed.
+
+Example succ_2 : succ one = two.
+Proof. reflexivity. Qed.
+
+Example succ_3 : succ two = three.
+Proof. reflexivity. Qed.
+
+Definition plus (n m : nat) : nat :=
+  fun (X : Type) (f: X -> X) (x : X) =>
+    m X f (n X f x).
+
+Example plus_1 : plus zero one = one.
+Proof. reflexivity. Qed.
+
+Example plus_2 : plus two three = plus three two.
+Proof. reflexivity. Qed.
+
+Example plus_3 :
+  plus (plus two two) three = plus one (plus three three).
+Proof. reflexivity. Qed.
+
+Definition mult (n m : nat) : nat :=
+  fun (X : Type) (f: X -> X) (x : X) =>
+    n X (m X f) x.
+
+Example mult_1 : mult one one = one.
+Proof. reflexivity. Qed.
+
+Example mult_2 : mult zero (plus three three) = zero.
+Proof. reflexivity. Qed.
+
+Example mult_3 : mult two three = plus three three.
+Proof. reflexivity. Qed.
+
+Definition exp (n m : nat) : nat :=
+  fun (X : Type) (f: X -> X) (x : X) =>
+    m (X -> X) (fun (ff:X -> X) => n X ff) f x.
+
+Example exp_1 : exp two two = plus two two.
+Proof. reflexivity. Qed.
+
+Example exp_2 : exp three two = plus (mult two (mult two two)) one.
+Proof. reflexivity. Qed.
+
+Example exp_3 : exp three zero = one.
+Proof. reflexivity. Qed.
+
+End Church.
