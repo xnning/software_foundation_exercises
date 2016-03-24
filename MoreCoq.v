@@ -119,3 +119,82 @@ Example trans_eq_exercise : forall(n m o p : nat),
 Proof.
   intros n m o p h1 h2.
   apply trans_eq with m. apply h2. apply h1. Qed.
+
+(* The inversion tactic *)
+
+Theorem eq_add_S : forall(n m : nat),
+     S n = S m ->
+     n = m.
+Proof.
+  intros n m eq. inversion eq. reflexivity. Qed.
+
+Theorem silly4 : forall(n m : nat),
+     [n] = [m] ->
+     n = m.
+Proof.
+  intros n o eq. inversion eq. reflexivity. Qed.
+
+Theorem silly5 : forall(n m o : nat),
+    [n;m] = [o;o]->
+    [n] = [m].
+Proof.
+  intros n m o eq. inversion eq. reflexivity. Qed.
+
+(* Exercise: 1 star (sillyex1) *)
+
+Example sillyex1 : forall(X : Type) (x y z : X) (l j : list X),
+     x :: y :: l = z :: j ->
+     y :: l = x :: j ->
+     x = y.
+Proof.
+  intros X x y z l j h1 h2.
+  inversion h2.
+  reflexivity.
+Qed.
+
+Theorem silly6 : forall(n : nat),
+     S n = O ->
+     2 + 2 = 5.
+Proof.
+  intros n contra. inversion contra. Qed.
+
+Theorem silly7 : forall(n m : nat),
+     false = true ->
+     [n] = [m].
+Proof.
+  intros n m contra. inversion contra. Qed.
+
+(* Exercise: 1 star (sillyex2) *)
+
+Example sillyex2 : forall(X : Type) (x y z : X) (l j : list X),
+     x :: y :: l = [] ->
+     y :: l = z :: j ->
+     x = z.
+Proof.
+  intros X x y z l j h1 h2.
+  inversion h1.
+Qed.
+
+Theorem f_equal : forall(A B : Type) (f: A -> B) (x y: A),
+    x = y -> f x = f y.
+Proof. intros A B f x y eq. rewrite eq. reflexivity. Qed.
+
+(* Exercise: 2 stars, optional (practice) *)
+
+Theorem beq_nat_0_l : forall n,
+   beq_nat 0 n = true -> n = 0.
+Proof.
+  intros n h.
+  destruct n as [ | n'].
+  reflexivity.
+  inversion h.
+Qed.
+
+Theorem beq_nat_0_r : forall n,
+   beq_nat n 0 = true -> n = 0.
+Proof.
+  intros n h.
+  destruct n as [ | n'].
+  reflexivity.
+  inversion h.
+Qed.
