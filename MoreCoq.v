@@ -520,3 +520,128 @@ Proof.
     apply h2. apply IHm'.
     apply h4. apply IHm'.
 Qed.
+
+(* Using destruct on Compound Expressions *)
+
+Definition sillyfun (n : nat) : bool :=
+  if beq_nat n 3 then false
+  else if beq_nat n 5 then false
+  else false.
+
+Theorem sillyfun_false : forall(n : nat),
+  sillyfun n = false.
+Proof.
+  intros n. unfold sillyfun.
+  destruct (beq_nat n 3).
+    Case "beq_nat n 3 = true". reflexivity.
+    Case "beq_nat n 3 = false". destruct (beq_nat n 5).
+      SCase "beq_nat n 5 = true". reflexivity.
+      SCase "beq_nat n 5 = false". reflexivity. Qed.
+
+(* Exercise: 1 star (override_shadow) *)
+
+Theorem override_shadow : forall(X:Type) x1 x2 k1 k2 (f : nat -> X),
+  (override (override f k1 x2) k1 x1) k2 = (override f k1 x1) k2.
+Proof.
+  intros X x1 x2 k1 k2 f.
+  unfold override.
+  destruct (beq_nat k1 k2).
+    Case "beq_nat k1 k2 = true". reflexivity.
+    Case "beq_nat k1 k2 = false". reflexivity.
+Qed.
+
+(* Exercise: 3 stars, optional (combine_split) *)
+
+Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
+  split l = (l1, l2) ->
+  combine l1 l2 = l.
+Proof.
+  intros X Y l.
+  induction l as [| (h1, h2) t].
+  Case "l = []".
+    intros l1 l2 h.
+    inversion h.
+    reflexivity.
+  Case "l = h :: t".
+    intros l1 l2 h.
+    inversion h.
+    destruct (split t) as (t1, t2).
+    inversion H0.
+    simpl.
+    apply f_equal.
+    apply IHt.
+    reflexivity.
+Qed.
+
+Definition sillyfun1 (n : nat) : bool :=
+  if beq_nat n 3 then true
+  else if beq_nat n 5 then true
+  else false.
+
+Theorem sillyfun1_odd_FAILED : forall(n : nat),
+     sillyfun1 n = true ->
+     oddb n = true.
+Proof.
+  intros n eq. unfold sillyfun1 in eq.
+  destruct (beq_nat n 3).
+  (* stuck... *)
+Abort.
+
+Theorem sillyfun1_odd : forall(n : nat),
+     sillyfun1 n = true ->
+     oddb n = true.
+Proof.
+  intros n eq. unfold sillyfun1 in eq.
+  destruct (beq_nat n 3) eqn:Heqe3.
+  (* Now we have the same state as at the point where we got stuck
+    above, except that the context contains an extra equality
+    assumption, which is exactly what we need to make progress. *)
+    Case "e3 = true". apply beq_nat_true in Heqe3.
+      rewrite -> Heqe3. reflexivity.
+    Case "e3 = false".
+     (* When we come to the second equality test in the body of the
+       function we are reasoning about, we can use eqn: again in the
+       same way, allow us to finish the proof. *)
+      destruct (beq_nat n 5) eqn:Heqe5.
+        SCase "e5 = true".
+          apply beq_nat_true in Heqe5.
+          rewrite -> Heqe5. reflexivity.
+        SCase "e5 = false". inversion eq. Qed.
+
+(* Exercise: 2 stars (destruct_eqn_practice) *)
+
+Theorem bool_fn_applied_thrice :
+  forall(f : bool -> bool) (b : bool),
+  f (f (f b)) = f b.
+Proof.
+  intros f b.
+  destruct b eqn:bh.
+    destruct (f true) eqn: ft.
+      rewrite -> ft.
+      apply ft.
+      destruct (f false) eqn: ff.
+        apply ft.
+        apply ff.
+    destruct (f false) eqn:ff.
+      destruct (f true) eqn: ft.
+        apply ft.
+        apply ff.
+      rewrite ff.
+      apply ff.
+Qed.
+
+(* Exercise: 2 stars (override_same) *)
+
+Theorem override_same : forall(X:Type) x1 k1 k2 (f : nat->X),
+  f k1 = x1 ->
+  (override f k1 x1) k2 = f k2.
+Proof.
+  intros X x1 k1 k2 f h.
+  unfold override.
+  destruct (beq_nat k1 k2) eqn: hk.
+  apply beq_nat_true in hk.
+  rewrite <- hk.
+  symmetry.
+  apply h.
+  reflexivity.
+Qed.
