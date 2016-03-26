@@ -204,16 +204,16 @@ Inductive prod (X Y : Type) : Type :=
 Arguments pair {X} {Y} _ _.
 
 Notation "( x , y )" := (pair x y).
-Notation "X × Y" := (prod X Y) : type_scope.
+Notation "X * Y" := (prod X Y) : type_scope.
 
-Definition fst {X Y : Type} (p : X × Y) : X :=
+Definition fst {X Y : Type} (p : X * Y) : X :=
   match p with (x,y) => x end.
 
-Definition snd {X Y : Type} (p : X × Y) : Y :=
+Definition snd {X Y : Type} (p : X * Y) : Y :=
   match p with (x,y) => y end.
 
 Fixpoint combine {X Y : Type} (lx : list X) (ly : list Y)
-           : list (X×Y) :=
+           : list (X * Y) :=
   match (lx,ly) with
   | ([],_) => []
   | (_,[]) => []
@@ -229,8 +229,8 @@ Eval compute in (combine [1;2] [false;false;true;true]).
 (* Exercise: 2 stars (split) *)
 
 Fixpoint split
-           {X Y : Type} (l : list (X×Y))
-           : (list X) × (list Y) :=
+           {X Y : Type} (l : list (X * Y))
+           : (list X) * (list Y) :=
   match l with
   | nil => (nil, nil)
   | (h1, h2) :: t => match (split t) with
@@ -316,10 +316,10 @@ Proof. reflexivity. Qed.
 (* Exercise: 2 stars, advanced (currying) *)
 
 Definition prod_curry {X Y Z : Type}
-  (f : X × Y -> Z) (x : X) (y : Y) : Z := f (x, y).
+  (f : X * Y -> Z) (x : X) (y : Y) : Z := f (x, y).
 
 Definition prod_uncurry {X Y Z : Type}
-  (f : X -> Y -> Z) (p : X × Y) : Z :=
+  (f : X -> Y -> Z) (p : X * Y) : Z :=
   f (fst p) (snd p).
 
 Check @prod_curry.
@@ -331,7 +331,7 @@ Proof.
   reflexivity. Qed.
 
 Theorem curry_uncurry : forall(X Y Z : Type)
-                               (f : (X × Y) -> Z) (p : X × Y),
+                               (f : (X * Y) -> Z) (p : X * Y),
   prod_uncurry (prod_curry f) p = f p.
 Proof.
   intros X Y Z f p.
@@ -399,7 +399,7 @@ Example test_filter_even_gt7_2 :
 (* Exercise: 3 stars (partition) *)
 
 Definition partition {X : Type} (test : X -> bool) (l : list X)
-                     : list X × list X :=
+                     : list X * list X :=
   (filter test l, filter (fun e => negb (test e)) l).
 
 Example test_partition1: partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
