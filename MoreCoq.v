@@ -645,3 +645,174 @@ Proof.
   apply h.
   reflexivity.
 Qed.
+
+(* Additional Exercises *)
+
+(* Exercise: 3 stars (beq_nat_sym) *)
+
+Theorem beq_nat_sym : forall(n m : nat),
+  beq_nat n m = beq_nat m n.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = 0".
+    intros m.
+    destruct m as [| m'].
+    reflexivity.
+    simpl. reflexivity.
+  Case "n = S n'".
+    destruct m as [| m'].
+    simpl. reflexivity.
+    simpl. apply IHn'.
+Qed.
+
+(* Exercise: 3 stars, optional (beq_nat_trans) *)
+
+Theorem beq_nat_trans : forall n m p,
+  beq_nat n m = true ->
+  beq_nat m p = true ->
+  beq_nat n p = true.
+Proof.
+  intros n m p nm mp.
+  apply beq_nat_true in nm.
+  apply beq_nat_true in mp.
+  rewrite -> nm. rewrite -> mp.
+  symmetry.
+  apply beq_nat_refl.
+Qed.
+
+(* Exercise: 3 stars, advanced (split_combine) *)
+
+Definition split_combine_statement : Prop :=
+  forall(X: Type) (l1 l2: list X),
+   (length l1 = length l2) ->
+   split (combine l1 l2) = (l1, l2).
+
+Theorem split_combine : split_combine_statement.
+Proof.
+  unfold split_combine_statement.
+  intros X l1.
+  induction l1 as [| h t].
+  Case "l1 = []".
+    intros l2 eq.
+    destruct l2.
+    reflexivity.
+    inversion eq.
+  Case "l1 = h :: t".
+    intros l2 eq.
+    destruct l2.
+    inversion eq.
+    inversion eq.
+    apply IHt in H0.
+    simpl.
+    rewrite -> H0.
+    reflexivity.
+Qed.
+
+(* Exercise: 3 stars (override_permute) *)
+
+Theorem override_permute : forall(X:Type) x1 x2 k1 k2 k3 (f : nat -> X),
+  beq_nat k2 k1 = false ->
+  (override (override f k2 x2) k1 x1) k3 = (override (override f k1 x1) k2 x2) k3.
+Proof.
+  intros X x1 x2 k1 k2 k3 f eq.
+  unfold override.
+  destruct (beq_nat k1 k3) eqn:k1k3.
+  apply beq_nat_true in k1k3.
+  rewrite -> k1k3 in eq.
+  rewrite -> eq.
+  reflexivity.
+  reflexivity.
+Qed.
+
+(* Exercise: 3 stars, advanced (filter_exercise) *)
+
+Theorem filter_exercise : forall(X : Type) (test : X -> bool)
+                             (x : X) (l lf : list X),
+     filter test l = x :: lf ->
+     test x = true.
+Proof.
+  intros X test x l lf eq.
+  generalize dependent x.
+  generalize dependent lf.
+  induction l as [| h t].
+  Case "l = []".
+    intros lf x eq.
+    inversion eq.
+  Case "l = h :: t".
+    intros lf x eq.
+    simpl in eq.
+    destruct (test h) eqn:testh.
+    SCase "test h = true".
+      inversion eq.
+      rewrite <- H0.
+      apply testh.
+    SCase "test h = false".
+      apply IHt in eq.
+      apply eq.
+Qed.
+
+(* Exercise: 4 stars, advanced (forall_exists_challenge) *)
+
+Fixpoint forallb {X: Type} (f : X -> bool) (l : list X) : bool :=
+  match l with
+  | nil => true
+  | h :: t => if f h then forallb f t else false
+  end.
+
+Example test_forallb1: forallb oddb [1;3;5;7;9] = true.
+reflexivity. Qed.
+Example test_forallb2: forallb negb [false;false] = true.
+reflexivity. Qed.
+Example test_forallb3: forallb evenb [0;2;4;5] = false.
+reflexivity. Qed.
+Example test_forallb4: forallb (beq_nat 5) [] = true.
+reflexivity. Qed.
+
+Fixpoint existsb {X: Type} (f : X -> bool) (l : list X) : bool :=
+  match l with
+  | nil => false
+  | h :: t => if f h then true else existsb f t
+  end.
+
+Example test_existsb1: existsb (beq_nat 5) [0;2;3;6] = false.
+reflexivity. Qed.
+Example test_existsb2: existsb (andb true) [true;true;false] = true.
+reflexivity. Qed.
+Example test_existsb3: existsb oddb [1;0;0;0;0;3] = true.
+reflexivity. Qed.
+Example test_existsb4: existsb evenb [] = false.
+reflexivity. Qed.
+
+Definition existsb' {X: Type} (f: X -> bool) (l : list X) : bool :=
+  negb (forallb (fun x => negb (f x)) l).
+
+Example test_existsb'1: existsb' (beq_nat 5) [0;2;3;6] = false.
+reflexivity. Qed.
+Example test_existsb'2: existsb' (andb true) [true;true;false] = true.
+reflexivity. Qed.
+Example test_existsb'3: existsb' oddb [1;0;0;0;0;3] = true.
+reflexivity. Qed.
+Example test_existsb'4: existsb' evenb [] = false.
+reflexivity. Qed.
+
+Theorem existsb_same_behavior : forall (X: Type) (f: X -> bool) (l : list X),
+    existsb f l = existsb' f l.
+Proof.
+    intros X f l.
+    induction l as [| h t].
+    Case "l = []".
+      simpl. unfold existsb'.
+      simpl. reflexivity.
+    Case "l = h :: t".
+      unfold existsb'.
+      simpl.
+      destruct (f h) eqn: fh.
+      SCase "f h = true".
+        simpl.
+        reflexivity.
+      SCase "f h = false".
+        simpl.
+        unfold existsb' in IHt.
+        apply IHt.
+Qed.
