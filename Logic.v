@@ -244,3 +244,225 @@ Proof.
       inversion h.
       split. reflexivity. reflexivity.
 Qed.
+
+(* Falsehood *)
+
+Inductive False : Prop := .
+
+Theorem False_implies_nonsense :
+  False -> 2 + 2 = 5.
+Proof.
+  intros contra.
+  inversion contra. Qed.
+
+Theorem nonsense_implies_False :
+  2 + 2 = 5 -> False.
+Proof.
+  intros contra.
+  inversion contra. Qed.
+
+Theorem ex_falso_quodlibet : forall(P:Prop),
+  False -> P.
+Proof.
+  intros P contra.
+  inversion contra. Qed.
+
+(* Exercise: 2 stars, advanced (True) *)
+
+Inductive True : Prop := tr.
+
+(* Negation *)
+
+Definition not (P:Prop) := P -> False.
+
+Notation "~ x" := (not x) : type_scope.
+
+Check not.
+
+Theorem not_False :
+  ~ False.
+Proof.
+  unfold not. intros H. inversion H. Qed.
+
+Theorem contradiction_implies_anything : forall P Q : Prop,
+  (P /\ ~P) -> Q.
+Proof.
+  intros P Q H. destruct H as [HP HNA]. unfold not in HNA.
+  apply HNA in HP. inversion HP. Qed.
+
+Theorem double_neg : forall P : Prop,
+  P -> ~~P.
+Proof.
+  intros P H. unfold not. intros G. apply G. apply H. Qed.
+
+Theorem contrapositive : forall P Q : Prop,
+  (P -> Q) -> (~Q -> ~P).
+Proof.
+  intros P Q HPQ.
+  unfold not.
+  intros HQ.
+  intros HP.
+  apply HQ. apply HPQ. apply HP.
+Qed.
+
+(* Exercise: 1 star (not_both_true_and_false) *)
+
+Theorem not_both_true_and_false : forall P : Prop,
+  ~ (P /\ ~P).
+Proof.
+  intros P.
+  unfold not.
+  intros HP.
+  destruct HP as [L R].
+  apply R. apply L.
+Qed.
+
+Theorem classic_double_neg : forall P : Prop,
+ ~~P -> P.
+Proof.
+  intros P H. unfold not in H.
+  Abort.
+
+(* Exercise: 5 stars, advanced, optional (classical_axioms) *)
+
+Definition peirce := forall P Q: Prop,
+  ((P -> Q) -> P) -> P.
+Definition classic := forall P:Prop,
+  ~~P -> P.
+Definition excluded_middle := forall P:Prop,
+  P \/ ~P.
+Definition de_morgan_not_and_not := forall P Q:Prop,
+  ~(~P /\ ~Q) -> P \/ Q.
+Definition implies_to_or := forall P Q:Prop,
+  (P -> Q) -> (~ P \/ Q).
+
+Theorem equiv_peirce_classic : peirce <-> classic.
+Proof.
+  split.
+  Case "->".
+    unfold peirce. unfold classic. unfold not.
+    intros H. intros P. intros h.
+    apply H with (Q:=False).
+    intros h2.
+    apply h in h2.
+    inversion h2.
+  Case "<-".
+    unfold classic. unfold peirce. unfold not.
+    intros H. intros P Q. intros h1.
+    apply H.
+    intros h2.
+    apply h2.
+    apply h1.
+    intros p.
+    apply h2 in p.
+    inversion p.
+Qed.
+
+Theorem equiv_classic_excluded_middle : classic <-> excluded_middle.
+Proof.
+  split.
+  Case "->".
+    unfold classic. unfold excluded_middle.
+    intros H. intros P.
+    apply H.
+    unfold not.
+    intros h.
+    apply h.
+    right.
+    intros p.
+    apply h.
+    left. apply p.
+  Case "<-".
+    unfold excluded_middle. unfold classic.
+    intros H. intros P.
+    unfold not.
+    intros h.
+    destruct (H P) as [p | notp].
+    apply p.
+    unfold not in notp.
+    apply h in notp.
+    inversion notp.
+Qed.
+
+Theorem equiv_exclued_middle_de_morgan_not_and_not :
+  excluded_middle <-> de_morgan_not_and_not.
+Proof.
+  unfold excluded_middle. unfold de_morgan_not_and_not.
+  split.
+  Case "->".
+    intros H. intros P Q. intros h.
+    destruct (H P) as [p | notp].
+    SCase "p". left. apply p.
+    SCase "notp".
+      destruct (H Q) as[q | notq].
+      SSCase "q". right. apply q.
+      SSCase "notq". assert (~P /\ ~Q). split. apply notp. apply notq.
+        apply h in H0. inversion H0.
+  Case "<-".
+    intros H. intros P.
+    apply H.
+    unfold not.
+    intros h.
+    destruct h as [l r].
+    apply r in l.
+    inversion l.
+Qed.
+
+Theorem equiv_de_morgan_not_and_not_implies_to_or :
+  de_morgan_not_and_not <-> implies_to_or.
+Proof.
+  split.
+  Case "->".
+    unfold de_morgan_not_and_not. unfold implies_to_or.
+    intros H. intros P Q. intros h.
+    apply H. unfold not.
+    intros h1.
+    destruct h1 as [l r].
+    apply l. intros p. apply r. apply h. apply p.
+  Case "<-".
+    unfold de_morgan_not_and_not. unfold implies_to_or.
+    intros H. intros P Q. intros h.
+    destruct (H P P) as [notp | p]. apply iff_refl.
+      SCase "notp".
+        destruct (H Q Q) as [notq | q]. apply iff_refl.
+        SSCase "notq". assert (~P /\ ~Q). split. apply notp. apply notq.
+          apply h in H0. inversion H0.
+        SSCase "q". right. apply q.
+      SCase "p". left. apply p.
+Qed.
+
+Theorem equiv_not_implies_to_or_peirce :
+  implies_to_or <-> peirce.
+Proof.
+  split.
+  Case "->".
+    unfold implies_to_or. unfold peirce.
+    intros H. intros P Q.
+    intros h.
+    assert (~ P \/ P). apply H. apply iff_refl.
+    destruct H0 as [notp | p].
+    SCase "notp".
+      assert (P -> Q). intros p. apply notp in p. inversion p.
+      apply h. apply H0.
+    SCase "p". apply p.
+  Case "<-".
+    unfold implies_to_or. unfold peirce.
+    intros H. intros P Q. intros h.
+    apply H with (Q:=False).
+    intros h1.
+    assert (P -> False). intros p. apply h1. right. apply h. apply p.
+    left.  unfold not. apply H0.
+Qed.
+
+(* Exercise: 3 stars (excluded_middle_irrefutable) *)
+
+Theorem excluded_middle_irrefutable: forall (P:Prop), ~ ~ (P \/ ~ P).
+Proof.
+  intros P.
+  unfold not.
+  intros h.
+  apply h.
+  right.
+  intros p.
+  apply h. left. apply p.
+Qed.
