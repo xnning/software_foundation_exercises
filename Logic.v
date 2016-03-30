@@ -466,3 +466,46 @@ Proof.
   intros p.
   apply h. left. apply p.
 Qed.
+
+Notation "x <> y" := (~ (x = y)) : type_scope.
+
+Theorem not_false_then_true : forall b : bool,
+  b <> false -> b = true.
+Proof.
+  intros b H. destruct b.
+  Case "b = true". reflexivity.
+  Case "b = false".
+    unfold not in H.
+    apply ex_falso_quodlibet.
+    apply H. reflexivity. Qed.
+
+(* Exercise: 2 stars (false_beq_nat) *)
+Theorem false_beq_nat : forall n m : nat,
+     n <> m ->
+     beq_nat n m = false.
+Proof.
+  intros n.
+  induction n as [ |n'].
+  Case "n = 0".
+    intros m h.
+    destruct m as [ |m'].
+    unfold not in h. apply ex_falso_quodlibet. apply h. reflexivity.
+    simpl. reflexivity.
+  Case "n = S n'".
+    intros m h.
+    destruct m as [| m'].
+    simpl. reflexivity.
+    unfold not in h. simpl. apply IHn'. unfold not.
+      intros h2. apply h. apply f_equal. apply h2.
+Qed.
+
+Theorem beq_nat_false : forall n m,
+  beq_nat n m = false -> n <> m.
+Proof.
+  intros n m h.
+  unfold not.
+  intros nm.
+  rewrite nm in h.
+  rewrite <- beq_nat_refl in h.
+  inversion h.
+Qed.
