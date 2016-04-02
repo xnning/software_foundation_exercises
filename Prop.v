@@ -233,3 +233,59 @@ Proof.
   rewrite <- double_plus in H1. rewrite <- plus_assoc in H1.
   apply ev_ev__ev with (n:= double n). apply H1. apply double_even.
 Qed.
+
+(* Discussion and Variations *)
+
+(* Parameterized Data Structures *)
+
+Inductive ev_list {X:Type} : list X -> Prop :=
+  | el_nil : ev_list []
+  | el_cc : forall x y l, ev_list l -> ev_list (x :: y :: l).
+
+Lemma ev_list__ev_length: forall X (l : list X), ev_list l -> ev (length l).
+Proof.
+    intros X l H. induction H.
+    Case "el_nil". simpl. apply ev_0.
+    Case "el_cc". simpl. apply ev_SS. apply IHev_list.
+Qed.
+
+Lemma ev_length__ev_list: forall X n, ev n -> forall(l : list X), n = length l -> ev_list l.
+Proof.
+  intros X n H.
+  induction H.
+  Case "ev_0". intros l H. destruct l.
+    SCase "[]". apply el_nil.
+    SCase "x::l". inversion H.
+  Case "ev_SS". intros l H2. destruct l.
+    SCase "[]". inversion H2. destruct l.
+    SCase "[x]". inversion H2.
+    SCase "x :: x0 :: l". apply el_cc. apply IHev. inversion H2. reflexivity.
+Qed.
+
+(* Exercise: 4 stars (palindromes) *)
+
+Inductive pal {X: Type}: list X -> Prop :=
+  | pal_nil : pal []
+  | pal_singleton : forall x, pal [x]
+  | pal_cc : forall (x:X) l, pal l -> pal (x :: snoc l x).
+
+Theorem pal_app_rev : forall X (l:list X), pal (l ++ rev l).
+Proof.
+  intros.
+  induction l as [| x l'].
+  Case "l = []". simpl. apply pal_nil.
+  Case "l = x :: l'". simpl. rewrite <- snoc_with_append.
+    apply pal_cc. apply IHl'.
+Qed.
+
+Theorem pal_rev : forall X (l:list X), pal l -> l = rev l.
+Proof.
+  intros.
+  induction H.
+  Case "l = []". reflexivity.
+  Case "l = [x]". reflexivity.
+  Case "l = x :: snoc l x".
+    simpl. rewrite rev_snoc. simpl.
+    rewrite <- IHpal. reflexivity.
+Qed.
+
