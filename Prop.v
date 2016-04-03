@@ -361,7 +361,7 @@ Proof.
   rewrite last_snoc in H1. inversion H1. reflexivity.
 Qed.
 
-Theorem rev_trans :forall X (l: list X) (h h2 x: X) (t t2:list X),
+Theorem last_trans :forall X (l: list X) (h h2 x: X) (t t2:list X),
     l = h :: t -> last l = Some x -> t = h2 :: t2 -> last t = Some x.
 Proof.
   intros.
@@ -370,7 +370,7 @@ Proof.
   rewrite H1. simpl. apply H0.
 Qed.
 
-Theorem init_tial : forall X (l: list X) (x: X),
+Theorem destruct_list : forall X (l: list X) (x: X),
     last l = Some x -> l = (init l ) ++ [x].
 Proof.
   intros.
@@ -381,7 +381,7 @@ Proof.
   inversion H. simpl. reflexivity.
   simpl. apply f_equal.
   apply IHt.
-  apply rev_trans with (l:=h::h2::t2)(h:=h)(t:=h2::t2)(h2:=h2)(t2:=t2).
+  apply last_trans with (l:=h::h2::t2)(h:=h)(t:=h2::t2)(h2:=h2)(t2:=t2).
   reflexivity. apply H. reflexivity.
 Qed.
 
@@ -398,17 +398,6 @@ Proof.
   induction l1.
   reflexivity.
   simpl. apply f_equal. apply IHl1.
-Qed.
-
-Theorem list_app_same: forall X (l1 l2 n: list X),  l1 ++ n = l2 ++ n -> l1 = l2.
-Proof.
-admit.
-
-Theorem S_greater: forall n:nat , blt_nat n (S n) = true.
-Proof.
-  intros.
-  induction n as [| n']. reflexivity.
-  simpl. apply IHn'.
 Qed.
 
 Theorem S_plus_greater: forall n m: nat, blt_nat n (S n + m) = true.
@@ -478,12 +467,12 @@ Proof.
   simpl.
   assert (last l<> None). apply last_non_nil with (h:=h1)(t:=t1). apply dl.
   destruct (last l) eqn:lastl.
-  assert (l = init l  ++ [x]). apply init_tial. apply lastl.
+  assert (l = init l  ++ [x]). apply destruct_list. apply lastl.
   assert (h1 = x). apply rev_last with (l:=h1::t1) (t:=t1). reflexivity. apply H. rewrite dl in lastl. apply lastl.
   destruct t1 as [|th tt] eqn:dt1.
   reflexivity.
-  assert (t1 = init t1 ++ [x]). apply init_tial.
-    apply rev_trans with (l:=l)(h:=h1)(h2:=th)(t2:=tt).
+  assert (t1 = init t1 ++ [x]). apply destruct_list.
+    apply last_trans with (l:=l)(h:=h1)(h2:=th)(t2:=tt).
     rewrite <- dt1 in dl. apply dl. apply lastl. apply dt1.
   rewrite <- dt1 in H. rewrite H3 in H.
   rewrite H2 in H.
@@ -513,9 +502,9 @@ Proof.
       rewrite H1. apply f_equal.
       unfold tail.
       rewrite snoc_app.
-      assert (last t = Some x). apply rev_trans with (l:=h::t) (h:=h) (t:=t) (x:=x) (h2:=h2)(t2:=t2).
+      assert (last t = Some x). apply last_trans with (l:=h::t) (h:=h) (t:=t) (x:=x) (h2:=h2)(t2:=t2).
         reflexivity. rewrite <- dt in H0. apply H0. apply dt.
-      assert (t = init t ++ [x]). apply init_tial. apply H2.
+      assert (t = init t ++ [x]). apply destruct_list. apply H2.
       rewrite <- dt. apply H3.
 Qed.
 
@@ -532,13 +521,13 @@ Theorem rev_pal_length : forall X (n: nat) (l: list X), ble_nat (length l) n = t
 Proof.
   intros X n.
   induction n as [| n'].
-  Case "length l = 0". intros. destruct l. apply pal_nil. inversion H.
-  Case "length l = S n'".
+  Case "length l <= 0". intros. destruct l. apply pal_nil. inversion H.
+  Case "length l <= S n'".
     destruct n' as [| n''] eqn:dn.
-    SCase "length l = 1". intros. destruct l eqn:dl.
+    SCase "length l <= 1". intros. destruct l eqn:dl.
       SSCase "l = []". apply pal_nil.
       SSCase "l = x :: l0". simpl in H. destruct l0. apply pal_singleton. inversion H.
-    SCase "length l = S (S n'')".
+    SCase "length l <= S (S n'')".
       intros.
       destruct l eqn:dl.
       SSCase "l = []". apply pal_nil.
@@ -550,19 +539,17 @@ Proof.
             rewrite <- dl in H0. apply H0. apply lastl .
           destruct H2.
           SSSSCase "l = [x]". rewrite <- dl. rewrite H2. apply pal_singleton.
-          SSSSCase "l = x ...".
-            assert (x = x0). apply rev_last with (l:=l)(h:=x)(t:=l0).
-              apply dl. rewrite <- dl in H0. apply H0. apply lastl.
+          SSSSCase "l = x0 :: snoc (init (tail l)) x0".
             assert (ble_nat (length (init (tail l ))) (S n'') = true).
               rewrite <- dl in H. rewrite H2 in H. simpl in H.
               rewrite length_snoc' with (n:= length (init (tail l))) in H. simpl in H.
               apply ble_nat_S. apply H. reflexivity.
-            assert (init (tail l ) = rev (init (tail l ))).
+            assert (init (tail l) = rev (init (tail l))).
               apply rev_tail_init. rewrite <- dl in H0. apply H0.
             assert (pal (init (tail l))).
-              apply IHn'. apply H4. apply H5.
+              apply IHn'. apply H3. apply H4.
             rewrite <- dl. rewrite H2.
-            apply (pal_cc x0 (init (tail l)) H6).
+            apply (pal_cc x0 (init (tail l)) H5).
        SSSCase "last l = None". unfold not in H1. assert False. apply H1. reflexivity. inversion H2.
 Qed.
 
