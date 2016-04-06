@@ -832,3 +832,113 @@ Example R_test1 : R 2 [1; 0].
 apply c2. apply c2. apply c1. Qed.
 Example R_test2 : R 1 [1;2;1;0].
 apply c3. apply c2. apply c3. apply c3. apply c2. apply c2. apply c2. apply c1. Qed.
+
+(* Programming with Propositions *)
+
+Check (2 + 2 = 4).
+(* ===> 2 + 2 = 4 : Prop *)
+
+Check (ble_nat 3 2 = false).
+(* ===> ble_nat 3 2 = false : Prop *)
+
+Check (beautiful 8).
+(* ===> beautiful 8 : Prop *)
+
+Check (2 + 2 = 5).
+(* ===> 2 + 2 = 5 : Prop *)
+
+Check (beautiful 4).
+(* ===> beautiful 4 : Prop *)
+
+Theorem plus_2_2_is_4 :
+  2 + 2 = 4.
+Proof. reflexivity. Qed.
+
+Definition plus_fact : Prop := 2 + 2 = 4.
+Check plus_fact.
+
+Theorem plus_fact_is_true :
+  plus_fact.
+Proof. reflexivity. Qed.
+
+Check (even 4).
+(* ===> even 4 : Prop *)
+Check (even 3).
+(* ===> even 3 : Prop *)
+Check even.
+(* ===> even : nat -> Prop *)
+
+Definition between (n m o: nat) : Prop :=
+  andb (ble_nat n o) (ble_nat o m) = true.
+
+Definition teen : nat -> Prop := between 13 19.
+
+Definition true_for_zero (P:nat->Prop) : Prop :=
+  P 0.
+
+Definition true_for_all_numbers (P:nat->Prop) : Prop :=
+  forall n, P n.
+
+Definition preserved_by_S (P:nat->Prop) : Prop :=
+  forall n', P n' -> P (S n').
+
+Definition natural_number_induction_valid : Prop :=
+  forall(P:nat->Prop),
+    true_for_zero P ->
+    preserved_by_S P ->
+    true_for_all_numbers P.
+
+(* Exercise: 3 stars (combine_odd_even) *)
+
+Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop :=
+  fun(n: nat) => if oddb n then (Podd n) else (Peven n).
+
+Theorem combine_odd_even_intro :
+  forall(Podd Peven : nat -> Prop) (n : nat),
+    (oddb n = true -> Podd n) ->
+    (oddb n = false -> Peven n) ->
+    combine_odd_even Podd Peven n.
+Proof.
+  intros.
+  destruct (oddb n) eqn:oddn.
+  unfold combine_odd_even. rewrite oddn.
+  apply H. reflexivity.
+  unfold combine_odd_even. rewrite oddn.
+  apply H0. reflexivity.
+Qed.
+
+Theorem combine_odd_even_elim_odd :
+  forall(Podd Peven : nat -> Prop) (n : nat),
+    combine_odd_even Podd Peven n ->
+    oddb n = true ->
+    Podd n.
+Proof.
+  intros.
+  unfold combine_odd_even in H.
+  rewrite H0 in H.
+  apply H.
+Qed.
+
+Theorem combine_odd_even_elim_even :
+  forall(Podd Peven : nat -> Prop) (n : nat),
+    combine_odd_even Podd Peven n ->
+    oddb n = false ->
+    Peven n.
+Proof.
+  intros.
+  unfold combine_odd_even in H.
+  rewrite H0 in H. apply H.
+Qed.
+
+(* Exercise: 4 stars, optional (true_upto_n__true_everywhere) *)
+
+Fixpoint true_upto_n__true_everywhere (n:nat) (f:nat -> Prop) :=
+  match n with
+  |O => true_for_all_numbers f
+  | S n' => f n -> (true_upto_n__true_everywhere n' f)
+  end.
+
+Example true_upto_n_example :
+    (true_upto_n__true_everywhere 3 (fun n => even n))
+  = (even 3 -> even 2 -> even 1 -> forall m : nat, even m).
+Proof. reflexivity.  Qed.
