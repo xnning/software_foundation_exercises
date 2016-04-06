@@ -567,3 +567,268 @@ Proof.
   apply rev_pal_length with (n:= length l).
   apply ble_nat_refl. apply H.
 Qed.
+
+(* Relations *)
+
+Inductive le : nat -> nat -> Prop :=
+  | le_n : forall n, le n n
+  | le_S : forall n m, (le n m) -> (le n (S m)).
+
+Notation "m <= n" := (le m n).
+
+Theorem test_le1 :
+  3 <= 3.
+Proof.
+  apply le_n. Qed.
+
+Theorem test_le2 :
+  3 <= 6.
+Proof.
+  apply le_S. apply le_S. apply le_S. apply le_n. Qed.
+
+Theorem test_le3 :
+  (2 <= 1) -> 2 + 2 = 5.
+Proof.
+  intros H. inversion H. inversion H2. Qed.
+
+Definition lt (n m:nat) := le (S n) m.
+
+Notation "m < n" := (lt m n).
+
+Inductive square_of : nat -> nat -> Prop :=
+  sq : forall n:nat, square_of n (n × n).
+
+Inductive next_nat : nat -> nat -> Prop :=
+  | nn : forall n:nat, next_nat n (S n).
+
+Inductive next_even : nat -> nat -> Prop :=
+  | ne_1 : forall n, ev (S n) -> next_even n (S n)
+  | ne_2 : forall n, ev (S (S n)) -> next_even n (S (S n)).
+
+(* Exercise: 2 stars (total_relation) *)
+
+Inductive total_relation: nat -> nat -> Prop :=
+  | tr : forall n m:nat, total_relation n m.
+
+(* Exercise: 2 stars (empty_relation) *)
+Inductive empty_relation: nat -> nat -> Prop := .
+
+(* Exercise: 2 stars, optional (le_exercises) *)
+
+Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
+Proof.
+  intros.
+  induction H0.
+  Case "n = o". apply H.
+  Case "o = S m0. n <= m0". apply IHle in H. apply (le_S m m0 H).
+Qed.
+
+Theorem O_le_n : forall n,
+  0 <= n.
+Proof.
+  induction n as [| n'].
+  apply le_n.
+  apply (le_S 0 n' IHn').
+Qed.
+
+Theorem n_le_m__Sn_le_Sm : forall n m,
+  n <= m -> S n <= S m.
+Proof.
+  intros.
+  induction H.
+  apply le_n.
+  apply le_S. apply IHle.
+Qed.
+
+Theorem Sn_le_Sm__n_le_m : forall n m,
+  S n <= S m -> n <= m.
+Proof.
+  intros.
+  inversion H.
+  apply le_n.
+  apply le_trans with (m:=n) (n:= S n) (o:=m).
+  apply le_S. apply le_n. apply H2.
+Qed.
+
+Theorem le_plus_l : forall a b,
+  a <= a + b.
+Proof.
+  intros.
+  induction b as [| b'].
+  rewrite <- plus_n_O. apply le_n.
+  rewrite <- plus_n_Sm. apply le_S. apply IHb'.
+Qed.
+
+Theorem plus_lt : forall n1 n2 m,
+  n1 + n2 < m ->
+  n1 < m /\ n2 < m.
+Proof.
+ unfold lt.
+ intros. split.
+ Case "left". apply le_trans with (m:= S n1) (n:=S (n1+n2)).
+   apply n_le_m__Sn_le_Sm. apply le_plus_l. apply H.
+ Case "right". apply le_trans with (m:= S n2) (n:=S (n1+n2)).
+   apply n_le_m__Sn_le_Sm. rewrite plus_comm. apply le_plus_l. apply H.
+Qed.
+
+Theorem lt_S : forall n m,
+  n < m ->
+  n < S m.
+Proof.
+  unfold lt.
+  intros.
+  apply le_S. apply H.
+Qed.
+
+Theorem ble_nat_true : forall n m,
+  ble_nat n m = true -> n <= m.
+Proof.
+  intros n m.
+  generalize dependent n.
+  induction m as [| m'].
+  intros. destruct n. apply le_n. inversion H.
+  intros. destruct n. apply O_le_n. apply n_le_m__Sn_le_Sm.
+    simpl in H. apply IHm' in H. apply H.
+Qed.
+
+Theorem le_ble_nat : forall n m,
+  n <= m ->
+  ble_nat n m = true.
+Proof.
+  intros.
+  induction H.
+  apply ble_nat_refl.
+  apply ble_nat_S. apply IHle.
+Qed.
+
+Theorem ble_nat_true_trans : forall n m o,
+  ble_nat n m = true -> ble_nat m o = true -> ble_nat n o = true.
+Proof.
+  intros.
+  apply le_ble_nat.
+  apply le_trans with (m:=n)(n:=m)(o:=o).
+  apply ble_nat_true. apply H.
+  apply ble_nat_true. apply H0.
+Qed.
+
+(* Exercise: 2 stars, optional (ble_nat_false) *)
+
+Theorem ble_nat_false : forall n m,
+  ble_nat n m = false -> ~(n <= m).
+Proof.
+  intros.
+  unfold not.
+  intros.
+  apply le_ble_nat in H0. rewrite H in H0. inversion H0.
+Qed.
+
+(* Exercise: 3 stars (R_provability2) *)
+
+Module R.
+
+  Inductive R : nat -> nat -> nat -> Prop :=
+   | c1 : R 0 0 0
+   | c2 : forall m n o, R m n o -> R (S m) n (S o)
+   | c3 : forall m n o, R m n o -> R m (S n) (S o)
+   | c4 : forall m n o, R (S m) (S n) (S (S o)) -> R m n o
+   | c5 : forall m n o, R m n o -> R n m o.
+
+  Example test_R1: R 1 1 2.
+  apply c3. apply c2. apply c1. Qed.
+
+  (* Exercise: 3 stars, optional (R_fact) *)
+  Theorem R_sum: forall m n o: nat, R m n o -> m + n = o.
+  Proof.
+    intros.
+    induction H.
+    reflexivity.
+    rewrite plus_Sn_m. rewrite IHR. reflexivity.
+    rewrite <- plus_n_Sm. rewrite IHR. reflexivity.
+    rewrite plus_Sn_m in IHR. rewrite <- plus_n_Sm in IHR. inversion IHR. reflexivity.
+    rewrite plus_comm. apply IHR.
+  Qed.
+
+  Theorem R_sum2: forall o m n:nat, m + n = o -> R m n o.
+  Proof.
+    intros o.
+    induction o.
+    Case "o = 0".
+    intros.
+    assert (m=0). destruct m. reflexivity. inversion H.
+    assert (n=0). destruct n. reflexivity. rewrite H0 in H. inversion H.
+    rewrite H0. rewrite H1. apply c1.
+    Case "o = S o'".
+    intros.
+    destruct m as [|m'].
+    simpl in H. rewrite H. apply c3. assert(0+o=o). reflexivity. apply IHo in H0. apply H0.
+    rewrite plus_Sn_m in H. inversion H. apply c2. rewrite H1. apply IHo in H1. apply H1.
+  Qed.
+
+End R.
+
+(* Exercise: 4 stars, advanced (subsequence) *)
+Inductive subseq {X:Type} : list X -> list X -> Prop :=
+| nil_subseq: forall l:list X, subseq nil l
+| ref_subseq: forall (x: X) (l1 l2 : list X), subseq l1 l2 -> subseq (x::l1) (x::l2)
+| cons_subseq: forall (x: X) (l1 l2: list X), subseq l1 l2 -> subseq l1 (x::l2).
+
+Theorem subseq_refl: forall {X: Type} (l: list X), subseq l l.
+Proof.
+  intros.
+  induction l.
+  apply nil_subseq.
+  apply ref_subseq. apply IHl.
+Qed.
+
+Theorem subseq_app: forall {X: Type} (l1 l2 l3: list X), subseq l1 l2 -> subseq l1 (l2 ++ l3).
+Proof.
+  intros.
+  generalize dependent l1.
+  generalize dependent l3.
+  induction l2 as [| h t].
+  Case "l2 = []".
+    intros. inversion H. simpl. apply nil_subseq.
+  Case "l2 = h :: t".
+    intros. inversion H.
+    SCase "h :: t = []". apply nil_subseq.
+    SCase "l1 = h :: l0". apply (ref_subseq h l0 (t++l3)). apply IHt. apply H2.
+    SCase "subseq l1 t". apply (cons_subseq h l1 (t++l3)). apply IHt. apply H2.
+Qed.
+
+Theorem subseq_trans: forall {X: Type} (l1 l2 l3 : list X), subseq l1 l2 -> subseq l2 l3 -> subseq l1 l3.
+Proof.
+  intros.
+  generalize dependent l1.
+  generalize dependent l2.
+  induction l3 as [| h t].
+  Case "l3 = []".
+    intros. inversion H0.  rewrite <- H1 in H. apply H.
+  Case "l3 = h :: t".
+    intros. inversion H0.
+    SCase "l2 = []". rewrite <- H1 in H. inversion H. apply nil_subseq.
+    SCase "h = x, l2 = x :: l0".
+      inversion H.
+      SSCase "l1 = []". apply nil_subseq.
+      SSCase "l1 = x0 :: l4, l2 = x0 :: l5".
+        rewrite <- H7 in H2.  inversion H2.
+        rewrite <- H9. rewrite <- H1.
+        apply ref_subseq.
+        apply IHt with (l2:= l5). rewrite H10 in H3. apply H3. apply H5.
+      SSCase "l2 = x :: l5, subseq l1 l5".
+        apply cons_subseq. apply IHt with (l2:=l5).
+        rewrite <- H7 in H2. inversion H2. rewrite <- H10. apply H3. apply H5.
+    SCase "subseq l2 t".
+      apply cons_subseq. apply IHt with (l2:=l2). apply H3. apply H.
+Qed.
+
+(* Exercise: 2 stars, optional (R_provability) *)
+
+Inductive R : nat -> list nat -> Prop :=
+      | c1 : R 0 []
+      | c2 : forall n l, R n l -> R (S n) (n :: l)
+      | c3 : forall n l, R (S n) l -> R n l.
+
+Example R_test1 : R 2 [1; 0].
+apply c2. apply c2. apply c1. Qed.
+Example R_test2 : R 1 [1;2;1;0].
+apply c3. apply c2. apply c3. apply c3. apply c2. apply c2. apply c2. apply c1. Qed.
