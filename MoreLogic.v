@@ -89,3 +89,62 @@ Proof.
   inversion qx.
   exists witness. right. apply H.
 Qed.
+
+(* Evidence-Carrying Booleans *)
+
+Inductive sumbool (A B : Prop) : Set :=
+ | left : A -> sumbool A B
+ | right : B -> sumbool A B.
+
+Notation "{ A } + { B }" :=  (sumbool A B) : type_scope.
+
+
+Theorem eq_nat_dec : forall n m : nat, {n = m} + {n <> m}.
+Proof.
+  intros n.
+  induction n as [|n'].
+  Case "n = 0".
+    intros m.
+    destruct m as [|m'].
+    SCase "m = 0".
+      left. reflexivity.
+    SCase "m = S m'".
+      right. intros contra. inversion contra.
+  Case "n = S n'".
+    intros m.
+    destruct m as [|m'].
+    SCase "m = 0".
+      right. intros contra. inversion contra.
+    SCase "m = S m'".
+      destruct IHn' with (m := m') as [eq | neq].
+      left. apply f_equal.  apply eq.
+      right. intros Heq. inversion Heq as [Heq']. apply neq. apply Heq'.
+Defined.
+
+Definition override' {X: Type} (f: nat->X) (k:nat) (x:X) : nat->X:=
+  fun (k':nat) => if eq_nat_dec k k' then x else f k'.
+
+Theorem override_same' : forall (X:Type) x1 k1 k2 (f : nat->X),
+  f k1 = x1 ->
+  (override' f k1 x1) k2 = f k2.
+Proof.
+  intros X x1 k1 k2 f. intros Hx1.
+  unfold override'.
+  destruct (eq_nat_dec k1 k2).   (* observe what appears as a hypothesis *)
+  Case "k1 = k2".
+    rewrite <- e.
+    symmetry. apply Hx1.
+  Case "k1 <> k2".
+    reflexivity.  Qed.
+
+(* Exercise: 1 star (override_shadow') *)
+
+Theorem override_shadow' : forall (X:Type) x1 x2 k1 k2 (f : nat->X),
+  (override' (override' f k1 x2) k1 x1) k2 = (override' f k1 x1) k2.
+Proof.
+  intros.
+  unfold override'.
+  destruct (eq_nat_dec k1 k2) as [keq |kneq].
+  Case "k1 = k2". reflexivity.
+  Case "k1 <> k2". reflexivity.
+Qed.
