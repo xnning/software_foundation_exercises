@@ -227,3 +227,186 @@ Example silly_presburger_example : forall m n o p,
 Proof.
   intros. omega.
 Qed.
+
+(* Evaluation as a Relation *)
+
+Module aevalR_first_try.
+
+Inductive aevalR : aexp -> nat -> Prop :=
+  | E_ANum  : forall (n: nat),
+      aevalR (ANum n) n
+  | E_APlus : forall (e1 e2: aexp) (n1 n2: nat),
+      aevalR e1 n1 ->
+      aevalR e2 n2 ->
+      aevalR (APlus e1 e2) (n1 + n2)
+  | E_AMinus: forall (e1 e2: aexp) (n1 n2: nat),
+      aevalR e1 n1 ->
+      aevalR e2 n2 ->
+      aevalR (AMinus e1 e2) (n1 - n2)
+  | E_AMult : forall (e1 e2: aexp) (n1 n2: nat),
+      aevalR e1 n1 ->
+      aevalR e2 n2 ->
+      aevalR (AMult e1 e2) (n1 * n2).
+
+Notation "e '||' n" := (aevalR e n) : type_scope.
+
+End aevalR_first_try.
+
+Reserved Notation "e '||' n" (at level 50, left associativity).
+
+Inductive aevalR : aexp -> nat -> Prop :=
+  | E_ANum : forall (n:nat),
+      (ANum n) || n
+  | E_APlus : forall (e1 e2: aexp) (n1 n2 : nat),
+      (e1 || n1) -> (e2 || n2) -> (APlus e1 e2) || (n1 + n2)
+  | E_AMinus : forall (e1 e2: aexp) (n1 n2 : nat),
+      (e1 || n1) -> (e2 || n2) -> (AMinus e1 e2) || (n1 - n2)
+  | E_AMult :  forall (e1 e2: aexp) (n1 n2 : nat),
+      (e1 || n1) -> (e2 || n2) -> (AMult e1 e2) || (n1 * n2)
+
+  where "e '||' n" := (aevalR e n) : type_scope.
+
+Tactic Notation "aevalR_cases" tactic(first) ident(c) :=
+  first;
+  [ Case_aux c "E_ANum" | Case_aux c "E_APlus"
+  | Case_aux c "E_AMinus" | Case_aux c "E_AMult" ].
+
+Theorem aeval_iff_aevalR : forall a n,
+  (a || n) <-> aeval a = n.
+Proof.
+ split.
+ Case "->".
+   intros H.
+   aevalR_cases (induction H) SCase; simpl.
+   SCase "E_ANum".
+     reflexivity.
+   SCase "E_APlus".
+     rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
+   SCase "E_AMinus".
+     rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
+   SCase "E_AMult".
+     rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
+ Case "<-".
+   generalize dependent n.
+   aexp_cases (induction a) SCase;
+      simpl; intros; subst.
+   SCase "ANum".
+     apply E_ANum.
+   SCase "APlus".
+     apply E_APlus.
+      apply IHa1. reflexivity.
+      apply IHa2. reflexivity.
+   SCase "AMinus".
+     apply E_AMinus.
+      apply IHa1. reflexivity.
+      apply IHa2. reflexivity.
+   SCase "AMult".
+     apply E_AMult.
+      apply IHa1. reflexivity.
+      apply IHa2. reflexivity.
+Qed.
+
+Theorem aeval_iff_aevalR' : forall a n,
+  (a || n) <-> aeval a = n.
+Proof.
+  split.
+  Case "->".
+    intros H; induction H; subst; reflexivity.
+  Case "<-".
+    generalize dependent n.
+    induction a; simpl; intros; subst; constructor;
+       try apply IHa1; try apply IHa2; reflexivity.
+Qed.
+
+(* Exercise: 3 stars (bevalR) *)
+
+Inductive bevalR : bexp -> bool -> Prop :=
+  | E_BTrue : bevalR BTrue true
+  | E_BFalse : bevalR BFalse false
+  | E_BEq :forall(a1 a2: aexp) (n1 n2: nat), (a1 || n1) -> (a2 || n2) -> bevalR (BEq a1 a2) (beq_nat n1 n2)
+  | E_BLe :forall(a1 a2: aexp) (n1 n2: nat), (a1 || n1) -> (a2 || n2) -> bevalR (BLe a1 a2) (ble_nat n1 n2)
+  | E_BNot :forall(b:bexp) (n1:bool), (bevalR b n1) -> bevalR (BNot b) (negb n1)
+  | E_BAnd: forall (b1 b2:bexp) (n1 n2:bool), (bevalR b1 n1) -> (bevalR b2 n2) -> bevalR (BAnd b1 b2) (andb n1 n2).
+
+Theorem beval_iff_bevalR : forall e b,
+  (bevalR e b) <-> beval e = b.
+Proof.
+  split.
+  Case "->".
+  intros; induction H; simpl;
+  try (apply aeval_iff_aevalR in H);
+  try (apply aeval_iff_aevalR in H0); subst; reflexivity.
+  Case "<-".
+  generalize dependent b.
+  induction e; simpl; intros; subst; constructor;
+  try (apply aeval_iff_aevalR); try (apply IHe); try (apply IHe1);
+  try (apply IHe2); reflexivity.
+Qed.
+
+Theorem eval_iff_bevalR: forall b n,
+    (bevalR b n) <-> beval b = n.
+Proof.
+  split.
+  Case "->".
+    intros.
+    induction H; simpl;
+    try(apply aeval_iff_aevalR in H; apply aeval_iff_aevalR in H0);
+    try(subst; reflexivity).
+  Case "<-".
+    generalize dependent n.
+    induction b; simpl; intros; subst; constructor;
+    try(apply aeval_iff_aevalR); try(apply IHb);
+    try(apply IHb1); try(apply IHb2); try(reflexivity).
+Qed.
+
+End AExp.
+
+Module aevalR_division.
+
+Inductive aexp : Type :=
+  | ANum : nat -> aexp
+  | APlus : aexp -> aexp -> aexp
+  | AMinus : aexp -> aexp -> aexp
+  | AMult : aexp -> aexp -> aexp
+  | ADiv : aexp -> aexp -> aexp.   (* <--- new *)
+
+Inductive aevalR : aexp -> nat -> Prop :=
+  | E_ANum : forall (n:nat),
+      (ANum n) || n
+  | E_APlus : forall (a1 a2: aexp) (n1 n2 : nat),
+      (a1 || n1) -> (a2 || n2) -> (APlus a1 a2) || (n1 + n2)
+  | E_AMinus : forall (a1 a2: aexp) (n1 n2 : nat),
+      (a1 || n1) -> (a2 || n2) -> (AMinus a1 a2) || (n1 - n2)
+  | E_AMult :  forall (a1 a2: aexp) (n1 n2 : nat),
+      (a1 || n1) -> (a2 || n2) -> (AMult a1 a2) || (n1 * n2)
+  | E_ADiv :  forall (a1 a2: aexp) (n1 n2 n3: nat),
+      (a1 || n1) -> (a2 || n2) -> (mult n2 n3 = n1) -> (ADiv a1 a2) || n3
+
+where "a '||' n" := (aevalR a n) : type_scope.
+
+End aevalR_division.
+
+Module aevalR_extended.
+
+Inductive aexp : Type :=
+  | AAny  : aexp                   (* <--- NEW *)
+  | ANum : nat -> aexp
+  | APlus : aexp -> aexp -> aexp
+  | AMinus : aexp -> aexp -> aexp
+  | AMult : aexp -> aexp -> aexp.
+
+Inductive aevalR : aexp -> nat -> Prop :=
+  | E_Any : forall (n:nat),
+      AAny || n                 (* <--- new *)
+  | E_ANum : forall (n:nat),
+      (ANum n) || n
+  | E_APlus : forall (a1 a2: aexp) (n1 n2 : nat),
+      (a1 || n1) -> (a2 || n2) -> (APlus a1 a2) || (n1 + n2)
+  | E_AMinus : forall (a1 a2: aexp) (n1 n2 : nat),
+      (a1 || n1) -> (a2 || n2) -> (AMinus a1 a2) || (n1 - n2)
+  | E_AMult :  forall (a1 a2: aexp) (n1 n2 : nat),
+      (a1 || n1) -> (a2 || n2) -> (AMult a1 a2) || (n1 * n2)
+
+where "a '||' n" := (aevalR a n) : type_scope.
+
+End aevalR_extended.
