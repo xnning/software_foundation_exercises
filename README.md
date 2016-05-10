@@ -7,6 +7,11 @@ Version: 3.2
 
 Coq Version: 8.5
 
+### Compatibility
+
+- `Poly.v`: `Set Asymmetric Patterns.` is needed to use `nil` directly in patterns.
+- `Prop.v`: Prop is no longer an available name in Coq 8.5. Rename it.
+
 ## Progress
 
 - [x] Basics
