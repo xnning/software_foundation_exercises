@@ -11,6 +11,10 @@ Coq Version: 8.5
 
 - `Poly.v`: `Set Asymmetric Patterns.` is needed to use `nil` directly in patterns.
 - `Prop.v`: Prop is no longer an available name in Coq 8.5. Rename it.
+- `Imp.v`:
+`Require Coq.omega.Omega.`
+`Ltac omega := Coq.omega.Omega.omega.`
+is requested in Coq 8.5 to directly use `omega`.
 
 ## Progress
 
