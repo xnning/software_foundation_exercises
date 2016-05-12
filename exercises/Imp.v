@@ -448,6 +448,8 @@ Proof.
   Case "x <> y". reflexivity.
 Qed.
 
+End Id.
+
 Definition state := id -> nat.
 
 Definition empty_state : state :=
