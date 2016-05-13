@@ -35,10 +35,5 @@ is requested in Coq 8.5 to directly use `omega`.
 - [ ] Equiv: Program Equivalence
 - [ ] Hoare: Hoare Logic, Part I
 - [ ] Hoare2: Hoare Logic, Part II
-- [ ] Smallstep: Small-step Operational Semantics
-  - [x] A Toy Language
-  - [x] Relations
-  - [x] Multi-Step Reduction
-  - [ ] Small-Step Imp
-  - [ ] Concurrent Imp
+- [x] Smallstep: Small-step Operational Semantics
   - [ ] A Small-Step Stack Machine
