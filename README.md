@@ -38,7 +38,7 @@ is requested in Coq 8.5 to directly use `omega`.
 - [ ] Smallstep: Small-step Operational Semantics
   - [x] A Toy Language
   - [x] Relations
-  - [ ] Multi-Step Reduction
+  - [x] Multi-Step Reduction
   - [ ] Small-Step Imp
   - [ ] Concurrent Imp
   - [ ] A Small-Step Stack Machine
