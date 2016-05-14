@@ -5,7 +5,7 @@
 Book: [Software Foundation](https://www.cis.upenn.edu/~bcpierce/sf/current/)
 Version: 3.2
 
-Coq Version: 8.5
+Coq Version: 8.5pl1
 
 ### Compatibility
 
@@ -15,6 +15,7 @@ Coq Version: 8.5
 `Require Coq.omega.Omega.`
 `Ltac omega := Coq.omega.Omega.omega.`
 is requested in Coq 8.5 to directly use `omega`.
+- `Auto.v`: `into_auto` does not print trace anymore and use `Info 1 auto` instead. But it seems to keep giving unknown...
 
 ## Progress
 
@@ -37,3 +38,6 @@ is requested in Coq 8.5 to directly use `omega`.
 - [ ] Hoare2: Hoare Logic, Part II
 - [x] Smallstep: Small-step Operational Semantics
   - [ ] A Small-Step Stack Machine
+- [ ] Auto: More Automation
+  - [x] The auto and eauto tactics
+  - [ ] Searching Hypotheses
