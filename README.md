@@ -38,6 +38,4 @@ is requested in Coq 8.5 to directly use `omega`.
 - [ ] Hoare2: Hoare Logic, Part II
 - [x] Smallstep: Small-step Operational Semantics
   - [ ] A Small-Step Stack Machine
-- [ ] Auto: More Automation
-  - [x] The auto and eauto tactics
-  - [ ] Searching Hypotheses
+- [x] Auto: More Automation

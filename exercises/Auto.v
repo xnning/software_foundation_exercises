@@ -215,3 +215,205 @@ Proof with auto.
         SSCase "Proof of assertion"...
       subst st'0...
 Qed.
+
+Ltac rwinv H1 H2 := rewrite H1 in H2; inv H2.
+
+Theorem ceval_deterministic'': forall c st st1 st2,
+     c / st || st1  ->
+     c / st || st2 ->
+     st1 = st2.
+Proof.
+  intros c st st1 st2 E1 E2;
+  generalize dependent st2;
+  ceval_cases (induction E1) Case;
+           intros st2 E2; inv E2; auto.
+  Case "E_Seq".
+    assert (st' = st'0) as EQ1.
+      SCase "Proof of assertion". auto.
+    subst st'0.
+    auto.
+  Case "E_IfTrue".
+    SCase "b evaluates to false (contradiction)".
+      rwinv H H5.
+  Case "E_IfFalse".
+    SCase "b evaluates to true (contradiction)".
+      rwinv H H5.
+  Case "E_WhileEnd".
+    SCase "b evaluates to true (contradiction)".
+      rwinv H H2.
+  Case "E_WhileLoop".
+    SCase "b evaluates to false (contradiction)".
+      rwinv H H4.
+    SCase "b evaluates to true".
+      assert (st' = st'0) as EQ1.
+        SSCase "Proof of assertion". auto.
+      subst st'0.
+      auto. Qed.
+
+Ltac find_rwinv :=
+  match goal with
+    H1: ?E = true, H2: ?E = false |- _ => rwinv H1 H2
+  end.
+
+Theorem ceval_deterministic''': forall c st st1 st2,
+     c / st || st1  ->
+     c / st || st2 ->
+     st1 = st2.
+Proof.
+  intros c st st1 st2 E1 E2;
+  generalize dependent st2;
+  ceval_cases (induction E1) Case;
+           intros st2 E2; inv E2; try find_rwinv; auto.
+  Case "E_Seq".
+    assert (st' = st'0) as EQ1.
+      SCase "Proof of assertion". auto.
+    subst st'0.
+    auto.
+  Case "E_WhileLoop".
+    SCase "b evaluates to true".
+      assert (st' = st'0) as EQ1.
+        SSCase "Proof of assertion". auto.
+      subst st'0.
+      auto. Qed.
+
+Theorem ceval_deterministic'''': forall c st st1 st2,
+     c / st || st1  ->
+     c / st || st2 ->
+     st1 = st2.
+Proof.
+  intros c st st1 st2 E1 E2;
+  generalize dependent st2;
+  ceval_cases (induction E1) Case;
+           intros st2 E2; inv E2; try find_rwinv; auto.
+  Case "E_Seq".
+    rewrite (IHE1_1 st'0 H1) in *. auto.
+  Case "E_WhileLoop".
+    SCase "b evaluates to true".
+      rewrite (IHE1_1 st'0 H3) in *. auto. Qed.
+
+Ltac find_eqn :=
+  match goal with
+    H1: forall x, ?P x -> ?L = ?R, H2: ?P ?X |- _ =>
+         rewrite (H1 X H2) in *
+  end.
+
+Theorem ceval_deterministic''''': forall c st st1 st2,
+     c / st || st1  ->
+     c / st || st2 ->
+     st1 = st2.
+Proof.
+  intros c st st1 st2 E1 E2;
+  generalize dependent st2;
+  ceval_cases (induction E1) Case;
+           intros st2 E2; inv E2; try find_rwinv; repeat find_eqn; auto.
+  Qed.
+
+Module Repeat.
+
+Inductive com : Type :=
+  | CSkip : com
+  | CAsgn : id -> aexp -> com
+  | CSeq : com -> com -> com
+  | CIf : bexp -> com -> com -> com
+  | CWhile : bexp -> com -> com
+  | CRepeat : com -> bexp -> com.
+
+Tactic Notation "com_cases" tactic(first) ident(c) :=
+  first;
+  [ Case_aux c "SKIP" | Case_aux c "::=" | Case_aux c ";"
+  | Case_aux c "IFB" | Case_aux c "WHILE"
+  | Case_aux c "CRepeat" ].
+
+Notation "'SKIP'" :=
+  CSkip.
+Notation "c1 ; c2" :=
+  (CSeq c1 c2) (at level 80, right associativity).
+Notation "X '::=' a" :=
+  (CAsgn X a) (at level 60).
+Notation "'WHILE' b 'DO' c 'END'" :=
+  (CWhile b c) (at level 80, right associativity).
+Notation "'IFB' e1 'THEN' e2 'ELSE' e3 'FI'" :=
+  (CIf e1 e2 e3) (at level 80, right associativity).
+Notation "'REPEAT' e1 'UNTIL' b2 'END'" :=
+  (CRepeat e1 b2) (at level 80, right associativity).
+
+Inductive ceval : state -> com -> state -> Prop :=
+  | E_Skip : forall st,
+      ceval st SKIP st
+  | E_Ass  : forall st a1 n X,
+      aeval st a1 = n ->
+      ceval st (X ::= a1) (update st X n)
+  | E_Seq : forall c1 c2 st st' st'',
+      ceval st c1 st' ->
+      ceval st' c2 st'' ->
+      ceval st (c1 ; c2) st''
+  | E_IfTrue : forall st st' b1 c1 c2,
+      beval st b1 = true ->
+      ceval st c1 st' ->
+      ceval st (IFB b1 THEN c1 ELSE c2 FI) st'
+  | E_IfFalse : forall st st' b1 c1 c2,
+      beval st b1 = false ->
+      ceval st c2 st' ->
+      ceval st (IFB b1 THEN c1 ELSE c2 FI) st'
+  | E_WhileEnd : forall b1 st c1,
+      beval st b1 = false ->
+      ceval st (WHILE b1 DO c1 END) st
+  | E_WhileLoop : forall st st' st'' b1 c1,
+      beval st b1 = true ->
+      ceval st c1 st' ->
+      ceval st' (WHILE b1 DO c1 END) st'' ->
+      ceval st (WHILE b1 DO c1 END) st''
+  | E_RepeatEnd : forall st st' b1 c1,
+      ceval st c1 st' ->
+      beval st' b1 = true ->
+      ceval st (CRepeat c1 b1) st'
+  | E_RepeatLoop : forall st st' st'' b1 c1,
+      ceval st c1 st' ->
+      beval st' b1 = false ->
+      ceval st' (CRepeat c1 b1) st'' ->
+      ceval st (CRepeat c1 b1) st''
+.
+
+Tactic Notation "ceval_cases" tactic(first) ident(c) :=
+  first;
+  [ Case_aux c "E_Skip" | Case_aux c "E_Ass"
+  | Case_aux c "E_Seq"
+  | Case_aux c "E_IfTrue" | Case_aux c "E_IfFalse"
+  | Case_aux c "E_WhileEnd" | Case_aux c "E_WhileLoop"
+  | Case_aux c "E_RepeatEnd" | Case_aux c "E_RepeatLoop"
+].
+
+Notation "c1 '/' st '||' st'" := (ceval st c1 st')
+                                 (at level 40, st at level 39).
+
+Theorem ceval_deterministic: forall c st st1 st2,
+     c / st || st1  ->
+     c / st || st2 ->
+     st1 = st2.
+Proof.
+  intros c st st1 st2 E1 E2;
+  generalize dependent st2;
+  ceval_cases (induction E1) Case;
+           intros st2 E2; inv E2; try find_rwinv; repeat find_eqn; auto.
+  Case "E_RepeatEnd".
+    SCase "b evaluates to false (contradiction)".
+       find_rwinv.
+       (* oops: why didn't [find_rwinv] solve this for us already?
+          answer: we did things in the wrong order. *)
+  case "E_RepeatLoop".
+     SCase "b evaluates to true (contradiction)".
+        find_rwinv.
+Qed.
+
+Theorem ceval_deterministic': forall c st st1 st2,
+     c / st || st1  ->
+     c / st || st2 ->
+     st1 = st2.
+Proof.
+  intros c st st1 st2 E1 E2;
+  generalize dependent st2;
+  ceval_cases (induction E1) Case;
+           intros st2 E2; inv E2; repeat find_eqn; try find_rwinv; auto.
+Qed.
+
+End Repeat.
