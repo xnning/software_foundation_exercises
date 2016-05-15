@@ -1030,3 +1030,5 @@ Proof.
 
   rewrite update_neq. assumption. intro X; inversion X.
 Qed.
+
+End CImp.
