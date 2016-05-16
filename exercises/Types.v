@@ -309,3 +309,90 @@ Proof.
   destruct (progress x T HT); auto.
   apply IHP.  apply (preservation x y T HT H).
   unfold stuck. split; auto.   Qed.
+
+(* Aside: the normalize Tactic *)
+
+Definition amultistep st := multi (astep st).
+Notation " t '/' st '==>a*' t' " := (amultistep st t t')
+  (at level 40, st at level 39).
+
+Example astep_example1 :
+  (APlus (ANum 3) (AMult (ANum 3) (ANum 4))) / empty_state
+  ==>a* (ANum 15).
+Proof.
+  apply multi_step with (APlus (ANum 3) (ANum 12)).
+    apply AS_Plus2.
+      apply av_num.
+      apply AS_Mult.
+  apply multi_step with (ANum 15).
+    apply AS_Plus.
+  apply multi_refl.
+Qed.
+
+Hint Constructors astep aval.
+Example astep_example1' :
+  (APlus (ANum 3) (AMult (ANum 3) (ANum 4))) / empty_state
+  ==>a* (ANum 15).
+Proof.
+  eapply multi_step. auto. simpl.
+  eapply multi_step. auto. simpl.
+  apply multi_refl.
+Qed.
+
+Tactic Notation "print_goal" := match goal with |- ?x => idtac x end.
+Tactic Notation "normalize" :=
+   repeat (print_goal; eapply multi_step ;
+             [ (eauto 10; fail) | (instantiate; simpl)]);
+   apply multi_refl.
+
+
+Example astep_example1'' :
+  (APlus (ANum 3) (AMult (ANum 3) (ANum 4))) / empty_state
+  ==>a* (ANum 15).
+Proof.
+  normalize.
+  (* At this point in the proof script, the Coq response shows
+     a trace of how the expression evaluated.
+
+   (APlus (ANum 3) (AMult (ANum 3) (ANum 4)) / empty_state ==>a* ANum 15)
+   (multi (astep empty_state) (APlus (ANum 3) (ANum 12)) (ANum 15))
+   (multi (astep empty_state) (ANum 15) (ANum 15))
+*)
+Qed.
+
+Example astep_example1''' : exists e',
+  (APlus (ANum 3) (AMult (ANum 3) (ANum 4))) / empty_state
+  ==>a* e'.
+Proof.
+  eapply ex_intro. normalize.
+(* This time, the trace will be:
+
+    (APlus (ANum 3) (AMult (ANum 3) (ANum 4)) / empty_state ==>a* ??)
+    (multi (astep empty_state) (APlus (ANum 3) (ANum 12)) ??)
+    (multi (astep empty_state) (ANum 15) ??)
+
+   where ?? is the variable ``guessed'' by eapply.
+*)
+Qed.
+
+(* Exercise: 1 star (normalize_ex) *)
+
+Theorem normalize_ex : exists e',
+  (AMult (ANum 3) (AMult (ANum 2) (ANum 1))) / empty_state
+  ==>a* e'.
+Proof.
+  eapply ex_intro. normalize.
+Qed.
+
+(* Exercise: 1 star, optional (normalize_ex') *)
+
+Theorem normalize_ex' : exists e',
+  (AMult (ANum 3) (AMult (ANum 2) (ANum 1))) / empty_state
+  ==>a* e'.
+Proof.
+  exists (ANum 6).
+  apply multi_step with (AMult (ANum 3) (ANum 2)).
+    apply AS_Mult2. auto. apply AS_Mult.
+  apply multi_step with (ANum 6).
+    apply AS_Mult. apply multi_refl.
+Qed.
