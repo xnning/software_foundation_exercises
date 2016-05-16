@@ -39,3 +39,6 @@ is requested in Coq 8.5 to directly use `omega`.
 - [x] Smallstep: Small-step Operational Semantics
   - [ ] A Small-Step Stack Machine
 - [x] Auto: More Automation
+- [ ] Types: Type Systems
+  - [x] Typed Arithmetic Expressions
+  - [ ] Aside: the normalize Tactic
