@@ -40,3 +40,4 @@ Following blue arrows, which is recommended path for one-semester course.
 - [x] Auto: More Automation
 - [x] Types: Type Systems
   - [ ] Additional Exercises
+- [x] Stlc: The Simply Typed Lambda-Calculus
