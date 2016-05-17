@@ -19,6 +19,8 @@ is requested in Coq 8.5 to directly use `omega`.
 
 ## Progress
 
+Following blue arrows, which is recommended path for one-semester course.
+
 - [x] Basics
 - [x] Induction: Proof by Induction
 - [x] Lists: Working with Structured Data
@@ -27,10 +29,7 @@ is requested in Coq 8.5 to directly use `omega`.
 - [x] Logic: Logic in Coq
 - [x] Prop: Propositions and Evidence
 - [x] MoreLogic: More on Logic in Coq
-- [ ] ProofObjects: Working with Explicit Evidence in Coq
-- [ ] MoreInd: More on Induction
 - [x] SfLib: Software Foundations Library
-- [ ] Rel: Properties of Relations
 - [x] Imp: Simple Imperative Programs
   - [ ] Additional Exercises
 - [ ] Equiv: Program Equivalence
