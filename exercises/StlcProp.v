@@ -243,3 +243,26 @@ Theorem preservation : forall t t' T,
       apply substitution_preserves_typing with T11...
       inversion HT1...
 Qed.
+
+(* Type Soundness *)
+
+(* Exercise: 2 stars, optional (type_soundness) *)
+
+Definition stuck (t:tm) : Prop :=
+  (normal_form step) t /\ ~ value t.
+
+
+Corollary soundness : forall t t' T,
+  empty |- t \in T ->
+  t ==>* t' ->
+  ~(stuck t').
+Proof.
+  intros t t' T Hhas_type Hmulti. unfold stuck.
+  intros [Hnf Hnot_val]. unfold normal_form in Hnf.
+  induction Hmulti.
+  Case "mult_refl".
+    apply progress in Hhas_type. destruct Hhas_type as [v1 | s1].
+    apply Hnot_val; auto. apply Hnf; auto.
+  Case "mult_step".
+    apply IHHmulti;(try assumption). eapply preservation; eauto.
+Qed.
