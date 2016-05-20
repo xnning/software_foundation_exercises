@@ -266,3 +266,18 @@ Proof.
   Case "mult_step".
     apply IHHmulti;(try assumption). eapply preservation; eauto.
 Qed.
+
+(* Uniqueness of Types *)
+
+Theorem types_unique : forall Gamma t T1 T2,
+ Gamma |- t \in T1 ->
+ Gamma |- t \in T2 ->
+ T1 = T2.
+Proof.
+ intros. generalize dependent T1; has_type_cases(induction H0) Case; intros; try(inv H; auto).
+ Case "T_Var". inv H0. rewrite H2 in *. inv H3; auto.
+ Case "T_Abs". apply IHhas_type in H6. subst; auto.
+ Case "T_App". apply IHhas_type1 in H3. inv H3; auto.
+Qed.
+
+End STLCProp.

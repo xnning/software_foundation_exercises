@@ -41,3 +41,5 @@ Following blue arrows, which is recommended path for one-semester course.
 - [x] Types: Type Systems
   - [ ] Additional Exercises
 - [x] Stlc: The Simply Typed Lambda-Calculus
+- [x] StlcProp: Properties of STLC
+  - [ ] Additional Exercises
