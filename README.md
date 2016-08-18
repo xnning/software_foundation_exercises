@@ -21,12 +21,12 @@ is requested in Coq 8.5 to directly use `omega`.
 
 Following blue arrows, which is recommended path for one-semester course.
 
-- [x] Basics
-- [x] Induction: Proof by Induction
-- [x] Lists: Working with Structured Data
-- [x] Poly: Polymorphism and Higher-Order Functions
-- [x] MoreCoq: More About Coq's Tactics
-- [x] Logic: Logic in Coq
+- [x] [Basics](./exercises/Basics.v)
+- [x] [Induction: Proof by Induction](./exercises/Induction.v)
+- [x] [Lists: Working with Structured Data](./exercises/Lists.v)
+- [x] [Poly: Polymorphism and Higher-Order Functions](./exercises/Poly.v)
+- [x] [MoreCoq: More About Coq's Tactics](./exercises/MoreCoq.v)
+- [x] [Logic: Logic in Coq](./exercises/Logic.v)
 - [x] Prop: Propositions and Evidence
 - [x] MoreLogic: More on Logic in Coq
 - [x] SfLib: Software Foundations Library
