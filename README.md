@@ -27,7 +27,7 @@ Following blue arrows, which is recommended path for one-semester course.
 - [x] [Poly: Polymorphism and Higher-Order Functions](./exercises/Poly.v)
 - [x] [MoreCoq: More About Coq's Tactics](./exercises/MoreCoq.v)
 - [x] [Logic: Logic in Coq](./exercises/Logic.v)
-- [x] Prop: Propositions and Evidence
+- [x] [Prop: Propositions and Evidence](./exercises/Prop1.v)
 - [x] MoreLogic: More on Logic in Coq
 - [x] SfLib: Software Foundations Library
 - [x] Imp: Simple Imperative Programs
