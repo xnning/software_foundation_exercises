@@ -30,7 +30,7 @@ Following blue arrows, which is recommended path for one-semester course.
 - [x] [Prop: Propositions and Evidence](./exercises/Prop1.v)
 - [x] [MoreLogic: More on Logic in Coq](./exercises/MoreLogic.v)
 - [ ] [SfLib: Software Foundations Library](./exercises/SfLib.v)
-- [x] Imp: Simple Imperative Programs
+- [x] [Imp: Simple Imperative Programs](./exercises/Imp.v)
   - [ ] Additional Exercises
 - [ ] Equiv: Program Equivalence
 - [ ] Hoare: Hoare Logic, Part I
