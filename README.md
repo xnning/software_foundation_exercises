@@ -29,7 +29,7 @@ Following blue arrows, which is recommended path for one-semester course.
 - [x] [Logic: Logic in Coq](./exercises/Logic.v)
 - [x] [Prop: Propositions and Evidence](./exercises/Prop1.v)
 - [x] [MoreLogic: More on Logic in Coq](./exercises/MoreLogic.v)
-- [x] SfLib: Software Foundations Library
+- [ ] [SfLib: Software Foundations Library](./exercises/SfLib.v)
 - [x] Imp: Simple Imperative Programs
   - [ ] Additional Exercises
 - [ ] Equiv: Program Equivalence
