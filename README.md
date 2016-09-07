@@ -35,7 +35,7 @@ Following blue arrows, which is recommended path for one-semester course.
 - [ ] Equiv: Program Equivalence
 - [ ] Hoare: Hoare Logic, Part I
 - [ ] Hoare2: Hoare Logic, Part II
-- [x] Smallstep: Small-step Operational Semantics
+- [x] [Smallstep: Small-step Operational Semantics](./exercises/Smallstep.v)
   - [ ] A Small-Step Stack Machine
 - [x] Auto: More Automation
 - [x] Types: Type Systems
