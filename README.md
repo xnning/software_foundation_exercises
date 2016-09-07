@@ -37,9 +37,9 @@ Following blue arrows, which is recommended path for one-semester course.
 - [ ] Hoare2: Hoare Logic, Part II
 - [x] [Smallstep: Small-step Operational Semantics](./exercises/Smallstep.v)
   - [ ] A Small-Step Stack Machine
-- [x] Auto: More Automation
-- [x] Types: Type Systems
+- [x] [Auto: More Automation](./exercises/Auto.v)
+- [x] [Types: Type Systems](./exercises/Types.v)
   - [ ] Additional Exercises
-- [x] Stlc: The Simply Typed Lambda-Calculus
-- [x] StlcProp: Properties of STLC
+- [x] [Stlc: The Simply Typed Lambda-Calculus](./exercises/Stlc.v)
+- [x] [StlcProp: Properties of STLC](./exercises/StlcProp.v)
   - [ ] Additional Exercises
