@@ -15,7 +15,7 @@ Coq Version: 8.5pl1
 `Require Coq.omega.Omega.`
 `Ltac omega := Coq.omega.Omega.omega.`
 is requested in Coq 8.5 to directly use `omega`.
-- `Auto.v`: `into_auto` does not print trace anymore and use `Info 1 auto` instead. But it seems to keep giving unknown...
+- `Auto.v`: `info_auto` does not print trace anymore and use `Info 1 auto` instead. But it seems to keep giving unknown...
 
 ## Progress
 
