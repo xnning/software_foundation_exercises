@@ -775,8 +775,19 @@ Proof.
 Theorem CSeq_congruence : forall c1 c1' c2 c2',
   cequiv c1 c1' -> cequiv c2 c2' ->
   cequiv (c1;;c2) (c1';;c2').
-Proof. 
-  (* FILL IN HERE *) Admitted.
+Proof.
+  intros.
+  unfold cequiv in *.
+  intros. split; intros.
+  Case "->".
+    inversion H1; subst.
+    apply E_Seq with st'0. apply H; auto.
+      apply H0; auto.
+  Case "<-".
+    inversion H1; subst.
+    apply E_Seq with st'0. apply H; auto.
+      apply H0; auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (CIf_congruence)  *)
@@ -784,7 +795,26 @@ Theorem CIf_congruence : forall b b' c1 c1' c2 c2',
   bequiv b b' -> cequiv c1 c1' -> cequiv c2 c2' ->
   cequiv (IFB b THEN c1 ELSE c2 FI) (IFB b' THEN c1' ELSE c2' FI).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  unfold cequiv in *.
+  intros. split; intros.
+  Case "->".
+    inversion H2; subst.
+      apply E_IfTrue.
+        rewrite <- H; auto.
+        apply H0; auto.
+      apply E_IfFalse.
+        rewrite <- H; auto.
+        apply H1; auto.
+  Case "<-".
+    inversion H2; subst.
+      apply E_IfTrue.
+        rewrite H; auto.
+        apply H0; auto.
+      apply E_IfFalse.
+        rewrite H; auto.
+        apply H1; auto.
+Qed.
 (** [] *)
 
 (** *** *)
@@ -1123,9 +1153,15 @@ Proof.
       (* The only interesting case is when both a1 and a2 
          become constants after folding *)
       simpl. destruct (beq_nat n n0); reflexivity.
-  Case "BLe". 
-    (* FILL IN HERE *) admit.
-  Case "BNot". 
+  Case "BLe".
+    simpl.
+    remember (fold_constants_aexp a) as a' eqn:Heqa'.
+    remember (fold_constants_aexp a0) as a0' eqn:Heqa0'.
+    rewrite (fold_constants_aexp_sound). rewrite <- Heqa'.
+    rewrite (fold_constants_aexp_sound a0). rewrite <- Heqa0'.
+    destruct a'; destruct a0'; try reflexivity.
+      simpl. destruct (ble_nat n n0); reflexivity.
+  Case "BNot".
     simpl. remember (fold_constants_bexp b) as b' eqn:Heqb'. 
     rewrite IHb.
     destruct b'; reflexivity. 
@@ -1162,7 +1198,13 @@ Proof.
       apply trans_cequiv with c2; try assumption.
       apply IFB_false; assumption.
   Case "WHILE".
-    (* FILL IN HERE *) Admitted.
+    assert (bequiv b (fold_constants_bexp b)).
+      SCase "Pf of assertion". apply fold_constants_bexp_sound.
+    destruct (fold_constants_bexp b) eqn:Heqb;
+      try (apply CWhile_congruence; assumption).
+    apply WHILE_true; auto.
+    apply WHILE_false; auto.
+Qed.
 (** [] *)
 
 (* ########################################################## *)
@@ -1204,7 +1246,81 @@ Proof.
    - Prove that the optimizer is sound.  (This part should be _very_
      easy.)  *)
 
-(* FILL IN HERE *)
+Fixpoint optimize_0plus_aexp (a : aexp) : aexp :=
+  match a with
+  | ANum n             => ANum n
+  | AId i              => AId i
+  | APlus (ANum 0) a2  => optimize_0plus_aexp a2
+  | APlus a1 a2        => APlus (optimize_0plus_aexp a1) (optimize_0plus_aexp a2)
+  | AMinus a1 a2       => AMinus (optimize_0plus_aexp a1) (optimize_0plus_aexp a2)
+  | AMult a1 a2        => AMult (optimize_0plus_aexp a1) (optimize_0plus_aexp a2)
+  end
+.
+
+Fixpoint optimize_0plus_bexp (a : bexp) : bexp :=
+  match a with
+  | BTrue              => BTrue
+  | BFalse             => BFalse
+  | BEq a1 a2          => BEq (optimize_0plus_aexp a1) (optimize_0plus_aexp a2)
+  | BLe a1 a2          => BLe (optimize_0plus_aexp a1) (optimize_0plus_aexp a2)
+  | BNot b1            => BNot (optimize_0plus_bexp b1)
+  | BAnd b1 b2         => BAnd (optimize_0plus_bexp b1) (optimize_0plus_bexp b2)
+  end
+.
+
+Fixpoint optimize_0plus_com (a : com) : com :=
+  match a with
+  | SKIP               => SKIP
+  | i ::= a            => CAss i (optimize_0plus_aexp a)
+  | c1 ;; c2           => (optimize_0plus_com c1) ;; (optimize_0plus_com c2)
+  | IFB b THEN c1 ELSE c2 FI =>
+    IFB (optimize_0plus_bexp b) THEN (optimize_0plus_com c1) ELSE (optimize_0plus_com c2) FI
+  | WHILE b DO c END =>
+    WHILE (optimize_0plus_bexp b) DO (optimize_0plus_com c) END
+  end
+.
+
+Lemma optimize_0plus_aexp_sound :
+  atrans_sound optimize_0plus_aexp.
+Proof.
+  unfold atrans_sound. intros. unfold aequiv. intros.
+  aexp_cases (induction a) Case; simpl;
+    try reflexivity;
+    try (destruct a1;
+         try rewrite IHa1; try rewrite IHa2; try reflexivity).
+    destruct n; simpl; try rewrite IHa2; auto.
+Qed.
+
+Lemma optimize_0plus_bexp_sound :
+  btrans_sound optimize_0plus_bexp.
+Proof.
+  unfold btrans_sound. intros. unfold bequiv. intros.
+  bexp_cases (induction b) Case;
+    try reflexivity;
+    simpl;
+    try rewrite (optimize_0plus_aexp_sound a);
+    try rewrite (optimize_0plus_aexp_sound a0);
+    try rewrite IHb;
+    try rewrite IHb1; try rewrite IHb2;
+    auto.
+Qed.
+
+Lemma optimize_0plus_cexp :
+  ctrans_sound optimize_0plus_com.
+Proof.
+  unfold ctrans_sound. intros.
+  com_cases (induction c) Case; simpl.
+  Case "SKIP". apply refl_cequiv.
+  Case "::=". apply CAss_congruence. apply optimize_0plus_aexp_sound.
+  Case ";;". apply CSeq_congruence; assumption.
+  Case "IFB".
+    apply CIf_congruence; auto.
+    apply optimize_0plus_bexp_sound.
+  Case "WHILE".
+    apply CWhile_congruence; auto.
+    apply optimize_0plus_bexp_sound.
+Qed.
+
 (** [] *)
 
 (* ####################################################### *)
