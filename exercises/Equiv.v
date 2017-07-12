@@ -1463,12 +1463,54 @@ Lemma aeval_weakening : forall i st a ni,
   var_not_used_in_aexp i a ->
   aeval (update st i ni) a = aeval st a.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction a; simpl; auto;
+            inversion H; subst; auto.
+  apply update_neq; auto.
+Qed.
 
 (** Using [var_not_used_in_aexp], formalize and prove a correct verson
     of [subst_equiv_property]. *)
 
-(* FILL IN HERE *)
+Theorem subst_equiv_aeval : forall a1 a2 i st,
+  st i = aeval st a1 ->
+  var_not_used_in_aexp i a1 ->
+  aeval st (subst_aexp i a1 a2) = aeval st a2.
+Proof.
+  intros. induction a2; simpl; auto.
+  destruct (eq_id_dec i i0); subst; auto.
+Qed.
+
+Lemma subst_equiv_property' : forall i1 i2 a1 a2,
+    var_not_used_in_aexp i1 a1 ->
+    cequiv (i1 ::= a1;; i2 ::= a2)
+           (i1 ::= a1;; i2 ::= subst_aexp i1 a1 a2).
+Proof.
+  intros.
+  unfold cequiv.
+  split; intros.
+  Case "->".
+    inversion H0; subst.
+    inversion H3; subst.
+    inversion H6; subst.
+    apply E_Seq with (update st i1 (aeval st a1)).
+    constructor; auto.
+    constructor.
+    apply subst_equiv_aeval; auto.
+    rewrite update_eq.
+    rewrite aeval_weakening; auto.
+  Case "<-".
+    inversion H0; subst.
+    inversion H3; subst.
+    inversion H6; subst.
+    apply E_Seq with (update st i1 (aeval st a1)).
+    constructor; auto.
+    constructor.
+    symmetry.
+    apply subst_equiv_aeval; auto.
+    rewrite update_eq.
+    rewrite aeval_weakening; auto.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (inequiv_exercise)  *)
@@ -1477,7 +1519,13 @@ Proof.
 Theorem inequiv_exercise: 
   ~ cequiv (WHILE BTrue DO SKIP END) SKIP.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold cequiv. unfold not.
+  intros.
+  assert (H1: SKIP / empty_state || empty_state). constructor.
+  apply H in H1.
+  apply WHILE_true_nonterm in H1; auto.
+  apply refl_bequiv.
+Qed.
 (** [] *)
 
 (** * Extended exercise: Non-deterministic Imp *)
@@ -1577,6 +1625,9 @@ Inductive ceval : com -> state -> state -> Prop :=
                   c1 / st || st' ->
                   (WHILE b1 DO c1 END) / st' || st'' ->
                   (WHILE b1 DO c1 END) / st || st''
+  | E_Havoc : forall (st : state) (X : id) (n : nat),
+                  (HAVOC X) / st || update st X n
+
 (* FILL IN HERE *)
 
   where "c1 '/' st '||' st'" := (ceval c1 st st').
@@ -1594,12 +1645,15 @@ Tactic Notation "ceval_cases" tactic(first) ident(c) :=
 
 Example havoc_example1 : (HAVOC X) / empty_state || update empty_state X 0.
 Proof.
-(* FILL IN HERE *) Admitted.
+  constructor.
+Qed.
 
 Example havoc_example2 :
   (SKIP;; HAVOC Z) / empty_state || update empty_state Z 42.
 Proof.
-(* FILL IN HERE *) Admitted.
+  apply E_Seq with empty_state;
+  constructor.
+Qed.
 (** [] *)
 
 (** Finally, we repeat the definition of command equivalence from above: *)
@@ -1626,7 +1680,32 @@ Definition pYX :=
 
 Theorem pXY_cequiv_pYX :
   cequiv pXY pYX \/ ~cequiv pXY pYX.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  left. unfold cequiv. unfold pXY. unfold pYX.
+  split; intros.
+  Case "->".
+    inversion H; subst.
+    inversion H2; subst.
+    inversion H5; subst.
+    destruct (eq_id_dec X Y). repeat rewrite e.
+      apply E_Seq with (update st Y n); constructor.
+      assert (update (update st X n) Y n0 = update (update st Y n0) X n).
+        apply functional_extensionality.
+        intros. rewrite update_permute; auto.
+      rewrite H0.
+      apply E_Seq with (update st Y n0); constructor.
+  Case "<-".
+    inversion H; subst.
+    inversion H2; subst.
+    inversion H5; subst.
+    destruct (eq_id_dec X Y). repeat rewrite e.
+      apply E_Seq with (update st Y n); constructor.
+      assert (update (update st X n0) Y n = update (update st Y n) X n0).
+        apply functional_extensionality.
+        intros. rewrite update_permute; auto.
+      rewrite <- H0.
+      apply E_Seq with (update st X n0); constructor.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, optional (havoc_copy)  *)
@@ -1644,7 +1723,29 @@ Definition pcopy :=
 
 Theorem ptwice_cequiv_pcopy :
   cequiv ptwice pcopy \/ ~cequiv ptwice pcopy.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  right. unfold cequiv. unfold not. intros.
+  assert (ptwice / empty_state || update (update empty_state X 5) Y 6).
+    unfold ptwice. apply E_Seq with (update empty_state X 5); constructor.
+  apply H in H0.
+    unfold pcopy in H0.
+    inversion H0; subst.
+    inversion H3; subst.
+    inversion H6; subst.
+    simpl in H7. rewrite update_eq in H7.
+    assert (update (update empty_state X n) Y n X = n).
+      rewrite update_permute.
+      apply update_eq.
+      unfold not. intros. inversion H1.
+    assert (update (update empty_state X n) Y n Y = n).
+      apply update_eq.
+    rewrite H7 in H1. rewrite H7 in H2.
+    rewrite update_permute in H1. rewrite update_eq in H1.
+    rewrite update_eq in H2.
+    rewrite <- H1 in H2. inversion H2.
+    unfold not. intros. inversion H4.
+Qed.
+
 (** [] *)
 
 (** The definition of program equivalence we are using here has some
@@ -1682,18 +1783,66 @@ Definition p2 : com :=
 
 Lemma p1_may_diverge : forall st st', st X <> 0 ->
   ~ p1 / st || st'.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  intros.
+  unfold not. intros.
+  remember p1 as p'.
+  unfold p1 in Heqp'.
+  induction H0; try inversion Heqp'; subst.
+
+  simpl in H0. apply negb_false_iff in H0.
+  apply beq_nat_true in H0. apply H; auto.
+
+  inversion H0_; subst.
+  inversion H6; subst.
+  apply IHceval2; auto.
+  rewrite update_eq.
+  simpl. Omega.omega.
+Qed.
 
 Lemma p2_may_diverge : forall st st', st X <> 0 ->
   ~ p2 / st || st'.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros.
+  unfold not. intros.
+  remember p2 as p'.
+  unfold p2 in Heqp'.
+  induction H0; try inversion Heqp'; subst.
+
+  simpl in H0. apply negb_false_iff in H0.
+  apply beq_nat_true in H0. apply H; auto.
+
+  inversion H0_; subst.
+  apply IHceval2; auto.
+Qed.
 
 (** You should use these lemmas to prove that p1 and p2 are actually
     equivalent. *)
 
 Theorem p1_p2_equiv : cequiv p1 p2.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  unfold cequiv.
+  intros.
+  destruct (st X =? 0) eqn:xz.
+  Case "X = 0".
+    split; intros.
+      SCase "->".
+        unfold p1 in H.
+        inversion H; subst.
+          unfold p2. apply E_WhileEnd; auto.
+        simpl in H2. rewrite xz in H2. simpl in H2. inversion H2.
+      SCase "<-".
+        unfold p2 in H.
+        inversion H; subst.
+          unfold p1. apply E_WhileEnd; auto.
+        simpl in H2. rewrite xz in H2. simpl in H2. inversion H2.
+  Case "X <> 0". split; intros.
+    apply p1_may_diverge in H. inversion H.
+      apply beq_nat_false in xz. auto.
+    apply p2_may_diverge in H. inversion H.
+      apply beq_nat_false in xz. auto.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (p3_p4_inquiv)  *)
@@ -1713,7 +1862,26 @@ Definition p4 : com :=
 
 
 Theorem p3_p4_inequiv : ~ cequiv p3 p4.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  unfold cequiv. unfold not. intros.
+  remember (update empty_state X 1) as st.
+  assert (p3 / st || update (update (update st Z 1) X 0) Z 2).
+    unfold p3. apply E_Seq with (update st Z 1); try constructor; simpl; auto.
+    apply E_WhileLoop with (update (update (update st Z 1) X 0) Z 2).
+      simpl. rewrite update_neq; auto.
+        rewrite Heqst. rewrite update_eq. simpl. auto.
+        unfold not. intros. inversion H0.
+      apply E_Seq with (update (update st Z 1) X 0); constructor.
+      apply E_WhileEnd. simpl. auto.
+  apply H in H0.
+    unfold p4 in H0. inversion H0; subst.
+    inversion H6; subst.
+  assert (update (update (update (update empty_state X 1) Z 1) X 0) Z 2 Z = 2).
+    apply update_eq.
+  assert (update st' Z (aeval st' (ANum 1)) Z = 1).
+    apply update_eq.
+  rewrite H7 in H2. rewrite H1 in H2. inversion H2.
+Qed.
 (** [] *)
 
 (** **** Exercise: 5 stars, advanced, optional (p5_p6_equiv)  *)
@@ -1728,7 +1896,42 @@ Definition p6 : com :=
 
 
 Theorem p5_p6_equiv : cequiv p5 p6.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  unfold cequiv. intros.
+  unfold p5. unfold p6.
+  split; intros.
+    Case "->".
+    remember ((WHILE BNot (BEq (AId X) (ANum 1)) DO HAVOC X END)) as p5.
+      induction H; try inversion Heqp5; subst.
+        simpl in H. apply negb_false_iff in H.
+          apply beq_nat_true in H.
+          assert (st = update st X 1).
+            apply functional_extensionality. intros.
+            destruct (eq_id_dec x X). subst. rewrite H. rewrite update_eq. auto.
+              rewrite update_neq; auto.
+          rewrite H0 at 2. constructor. simpl; auto.
+        inversion H0; subst.
+          assert ((X ::= ANum 1) / update st X n || st''). apply IHceval2. auto.
+          inversion H2; subst.
+          simpl.
+          assert (update (update st X n) X 1 = update st X 1).
+            apply functional_extensionality. intros.
+            apply update_shadow.
+          rewrite H3. constructor. reflexivity.
+    Case "<-".
+    inversion H; subst. simpl.
+      destruct (st X =? 1) eqn: xv.
+        assert (st = update st X 1).
+            apply functional_extensionality. intros.
+            apply beq_nat_true in xv.
+            destruct (eq_id_dec x X). subst. rewrite xv. rewrite update_eq. auto.
+              rewrite update_neq; auto.
+        rewrite <- H0.
+      apply E_WhileEnd; auto. simpl. rewrite xv; auto.
+      apply E_WhileLoop with (update st X 1); try constructor.
+        simpl. rewrite xv. reflexivity.
+        simpl. reflexivity.
+Qed.
 (** [] *)
 
 End Himp.
