@@ -1,4 +1,4 @@
-# Exercise Solutions For SF
+# Exercise Solutions
 
 ## Basic
 
@@ -32,7 +32,8 @@ Following blue arrows, which is recommended path for one-semester course.
 - [ ] [SfLib: Software Foundations Library](./exercises/SfLib.v)
 - [x] [Imp: Simple Imperative Programs](./exercises/Imp.v)
   - [ ] Additional Exercises
-- [ ] Equiv: Program Equivalence
+- [x] [Equiv: Program Equivalence](./exercises/Equiv.v)
+  - [ ] Additional Exercises
 - [ ] Hoare: Hoare Logic, Part I
 - [ ] Hoare2: Hoare Logic, Part II
 - [x] [Smallstep: Small-step Operational Semantics](./exercises/Smallstep.v)
